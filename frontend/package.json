@@ -43,5 +43,10 @@
     "eslint-config-next": "15.5.2",
     "tw-animate-css": "^1.3.7",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@ethereumjs/tx": "10.0.0"
+    }
   }
 }
