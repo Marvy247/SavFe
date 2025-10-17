@@ -1,44 +1,59 @@
-import { Providers } from "./provider";
+'use client';
+import '@coinbase/onchainkit/styles.css';
+import './globals.css';
+import { OnchainKitProvider } from '@coinbase/onchainkit';
+import { WagmiProvider } from "wagmi";
+import { config } from "../lib/wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactNode, useState } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
-import "./globals.css";
+import { useTheme } from "next-themes";
 
-export const metadata = {
-  title: "SavFe - Smarter and Secure",
-  description:
-    "A modern DeFi application for rotating savings groups and trust-based financial services",
-  keywords: ["DeFi", "Savings", "Thrift", "Ethereum", "Web3"],
-  authors: [{ name: "SavFe Team" }],
-  viewport: "width=device-width, initial-scale=1",
-};
+function ThemedOnchainKitProvider({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Providers>{children}</Providers>
-        </ThemeProvider>
+    <OnchainKitProvider
+      apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+      chain={config.chains[0]}
+      config={{
+        appearance: {
+          mode: theme === 'dark' ? 'dark' : 'light', // 'light' | 'dark' | 'auto'
+        },
+        wallet: {
+          display: 'modal', // 'modal' | 'drawer'
+          preference: 'all', // 'all' | 'smartWalletOnly' | 'eoaOnly'
+        },
+        // paymaster: process.env.NEXT_PUBLIC_PAYMASTER_URL || 'https://paymaster.base.org', // Paymaster URL when available
+      }}
+    >
+      {children}
+    </OnchainKitProvider>
+  );
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // keep QueryClient stable across renders
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
+    <html suppressHydrationWarning>
+      <body>
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+              scriptProps={{ async: true }}
+            >
+              <ThemedOnchainKitProvider>
+                {children}
+              </ThemedOnchainKitProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       </body>
     </html>
   );

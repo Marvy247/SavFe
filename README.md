@@ -104,8 +104,8 @@ SavFe/
    # Set your private key
    export PRIVATE_KEY=your_private_key
 
-   # Deploy to Lisk Sepolia
-   forge script script/DeploySavfe.s.sol --rpc-url https://rpc.sepolia-api.lisk.com --broadcast --verify
+   # Deploy to Base Sepolia
+   forge script script/DeploySavfe.s.sol --rpc-url https://sepolia.base.org --broadcast --verify
    ```
 
 ### Frontend Setup
@@ -121,7 +121,7 @@ SavFe/
    ```env
    NEXT_PUBLIC_FACTORY_ADDRESS=your_factory_contract_address
    NEXT_PUBLIC_SAVFE_ADDRESS=your_savfe_contract_address
-   NEXT_PUBLIC_CHAIN_ID=4202
+   NEXT_PUBLIC_CHAIN_ID=84532
    ```
 
 3. **Run development server**:
@@ -138,7 +138,7 @@ SavFe/
 ## 🌐 Deployment
 
 ### Smart Contracts
-- **Network**: Lisk Sepolia Testnet
+- **Network**: Base Sepolia Testnet
 - **Factory Address**: See `contract/README.md`
 - **Savfe Address**: See `contract/README.md`
 
@@ -185,7 +185,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - OpenZeppelin for secure contract templates
 - Uniswap for DEX infrastructure
-- Lisk for testnet support
+- Base for testnet support
 - The DeFi community for inspiration
 
 ## 📞 Support
@@ -198,3 +198,6 @@ For questions or support:
 ---
 
 **SavFe** - Building the future of decentralized savings, one block at a time.
+0: contract Savfe 0x9115D891bcAa85600f49D020Cbaa2F50F3d75BD4
+1: contract RotatingSavingsGroupFactory 0xDC0d99dd1703AbC166113d9b3E9C5E45971553F1
+2: contract SavfeNFT 0x81B0EA2170617800303c7d85e46C77A63a5A945c

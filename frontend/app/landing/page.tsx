@@ -1,24 +1,19 @@
 "use client";
-import Header from "@/components/Header";
+import dynamic from 'next/dynamic';
+const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { Button } from "@/components/ui/button";
 
 import Link from "next/link";
-import { useAccount, useConnect } from "wagmi";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { useAccount } from "wagmi";
+import { ConnectWallet } from '@coinbase/onchainkit/wallet';
+import { Identity, Name, Avatar } from '@coinbase/onchainkit/identity';
 import { useState, useEffect } from "react";
 
 export default function LandingPage() {
-  const { isConnected } = useAccount();
-  const { connectors, connect } = useConnect();
+  const { isConnected, address } = useAccount();
   const [isClient, setIsClient] = useState(false);
 
   // Fix hydration mismatch by only showing connection status after client mount
@@ -38,7 +33,7 @@ export default function LandingPage() {
               className="text-sm font-medium rounded-full py-1"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>{" "}
-              Built on Lisk
+              Built on Base
             </Badge>
           </div>
           <h2 className="relative z-10 mx-auto max-w-4xl text-center text-2xl text-neutral-800 md:text-4xl lg:text-7xl dark:text-neutral-100">
@@ -56,40 +51,19 @@ export default function LandingPage() {
 
           <div className="flex justify-center mt-8 space-x-4">
             {isClient && isConnected ? (
-              <Link href="/dashboard">
-                <Button size="lg" className="px-8">
-                  Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="lg" className="px-8 gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,128H56a8,8,0,0,1-8-8V78.63A23.84,23.84,0,0,0,56,80H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,132Z"></path>
-                    </svg>
-                    Connect Wallet
-                    <ChevronDown className="h-4 w-4" />
+              <div className="flex items-center space-x-4">
+                <Identity address={address}>
+                  <Avatar />
+                  <Name />
+                </Identity>
+                <Link href="/dashboard">
+                  <Button size="lg" className="px-8">
+                    Dashboard
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  {connectors.map((connector) => (
-                    <DropdownMenuItem
-                      key={connector.uid}
-                      onClick={() => connect({ connector })}
-                      className="cursor-pointer"
-                    >
-                      {connector.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </Link>
+              </div>
+            ) : (
+              <ConnectWallet />
             )}
             <Button variant="outline" size="lg" className="px-8">
               Learn More
@@ -143,7 +117,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-xl font-semibold mb-2">Lightning Fast</h4>
               <p className="text-muted-foreground">
-                Experience instant transactions and real-time updates powered by Lisk's fast blockchain
+                Experience instant transactions and real-time updates powered by Base's fast blockchain
               </p>
             </div>
           </div>

@@ -330,6 +330,24 @@ export default function GroupExplorer({ groupId }: { groupId: number }) {
 
         {/* Action Buttons */}
         <div className="space-y-3">
+          {/* Join Group Button */}
+          {!isUserMember && (
+            <Button
+                onClick={() => writeContract({ abi: FACTORY_ABI, address: FACTORY_ADDRESS, functionName: 'joinGroup', args: [groupId] })}
+                disabled={!isConnected || isPending}
+                className="w-full"
+                size="lg"
+            >
+                {isPending ? (
+                    <div className="flex items-center justify-center space-x-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                        <span>Joining...</span>
+                    </div>
+                ) : (
+                    "Join Group"
+                )}
+            </Button>
+          )}
           {/* Contribute Button */}
           <Button
             onClick={handleContribute}

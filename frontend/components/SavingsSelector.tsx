@@ -5,7 +5,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { SAVFE_ABI, SAVFE_ADDRESS, CHILD_SAVFE_ABI } from "../lib/contract";
 import { formatEther } from "viem";
 import { createPublicClient, http } from "viem";
-import { liskSepolia } from "wagmi/chains";
+import { baseSepolia } from "wagmi/chains";
 
 interface SavingOption {
   id: string;
@@ -89,6 +89,9 @@ export default function SavingsSelector({ value, onChange, className = "" }: Sav
     abi: SAVFE_ABI,
     functionName: 'getUserChildContractAddress',
     args: [],
+    query: {
+      enabled: !!address,
+    }
   });
 
   // Get savings names from child contract
@@ -157,7 +160,7 @@ export default function SavingsSelector({ value, onChange, className = "" }: Sav
       // Helper function to fetch saving data from contract
       const fetchSavingData = async (contractAddr: `0x${string}`, savingName: string) => {
         const publicClient = createPublicClient({
-          chain: liskSepolia,
+          chain: baseSepolia,
           transport: http(),
         });
 

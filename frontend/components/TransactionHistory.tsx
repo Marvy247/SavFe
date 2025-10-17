@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
+// import { TransactionHistory as OnchainKitTransactionHistory } from '@coinbase/onchainkit/transaction-history';
 import {
   Card,
   CardContent,
@@ -49,6 +50,9 @@ export default function TransactionHistory() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const transactionsPerPage = 3;
+
+  // Use OnchainKit TransactionHistory when available
+  const useOnchainKitHistory = false; // Toggle this when OnchainKit component becomes available
 
   useEffect(() => {
     if (address && publicClient) {
@@ -360,6 +364,45 @@ export default function TransactionHistory() {
     );
   }
 
+  // If using OnchainKit TransactionHistory, render it instead
+  if (useOnchainKitHistory) {
+    return (
+      <Card className="animate-fade-in">
+        <CardHeader className="pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                fill="currentColor"
+                viewBox="0 0 256 256"
+              >
+                <path d="M200,80H168V56a24,24,0,0,0-24-24H112A24,24,0,0,0,88,56V80H56a8,8,0,0,0,0,16H64V200a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V96h8a8,8,0,0,0,0-16ZM104,56a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V80H104ZM184,200a0,0,0,0,1,0,0H72a0,0,0,0,1,0-0V96H184Z"></path>
+              </svg>
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold text-card-foreground">
+                Transaction History
+              </CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                Complete audit trail of your savings activities
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* TODO: Replace with OnchainKit TransactionHistory when available:
+          <OnchainKitTransactionHistory address={address} />
+          */}
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">OnchainKit TransactionHistory component not yet available</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="animate-fade-in">
       <CardHeader className="pb-4">
@@ -500,7 +543,7 @@ export default function TransactionHistory() {
                     <TableCell>{getStatusBadge(tx.status)}</TableCell>
                     <TableCell>
                       <a
-                        href={`https://sepolia-blockscout.lisk.com/tx/${tx.txHash}`}
+                        href={`https://sepolia.basescan.org/tx/${tx.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-mono text-sm transition-colors"

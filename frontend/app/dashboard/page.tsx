@@ -1,18 +1,27 @@
 "use client";
 import CreateGroup from "@/components/CreateGroup";
 import EarningsDisplay from "@/components/EarningsDisplay";
-import Footer from "@/components/Footer";
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 import GroupExplorer from "@/components/GroupExplorer";
 import GroupsTable from "@/components/GroupsTable";
-import Header from "@/components/Header";
+const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 import JoinGroup from "@/components/JoinGroup";
 import SavfeActions from "@/components/SavfeActions";
 import WithdrawEarnings from "@/components/WithdrawEarnings";
 import AdminWithdrawEarnings from "@/components/AdminWithdrawEarnings";
+import NFTGallery from "@/components/NFTGallery";
+import SavingsChallenges from "@/components/SavingsChallenges";
+import AISavingsSuggestions from "@/components/AISavingsSuggestions";
+import EmergencyWithdraw from "@/components/EmergencyWithdraw";
 
 import PenaltyCalculator from "@/components/PenaltyCalculator";
 import TransactionHistory from "@/components/TransactionHistory";
 import SavingsVisualization from "@/components/SavingsVisualization";
+const Identity = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Identity), { ssr: false });
+const Avatar = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Avatar), { ssr: false });
+const Name = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Name), { ssr: false });
+import { Swap } from '@coinbase/onchainkit/swap';
+// import { Notification } from '@coinbase/onchainkit/notification'; // Not available yet
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
@@ -27,7 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+
 import { useAccount, useReadContract } from "wagmi";
 import { FACTORY_ABI, FACTORY_ADDRESS, readGroupData } from "@/lib/contract";
 import { formatEther } from "viem";
@@ -49,6 +58,7 @@ export default function DashboardPage() {
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [totalPot, setTotalPot] = useState("0");
   const [totalMembers, setTotalMembers] = useState(0);
+
 
   // Scroll to top on component mount
   useEffect(() => {
@@ -148,6 +158,36 @@ export default function DashboardPage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       )
+    },
+    {
+      id: "challenges",
+      label: "Challenges",
+      description: "Participate in savings challenges and earn rewards",
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      id: "ai-suggestions",
+      label: "AI Suggestions",
+      description: "Get personalized savings recommendations powered by AI",
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      )
+    },
+    {
+      id: "badges",
+      label: "Achievements",
+      description: "View your earned badges and achievements",
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      )
     }
   ];
 
@@ -157,19 +197,26 @@ export default function DashboardPage() {
       <div className="relative flex w-full flex-col items-start justify-start overflow-hidden ">
         <BackgroundRippleEffect />
         <div className="z-10 mt-10 w-full">
-          <div className="flex justify-center items-center space-x-2 mb-4">
-            <Badge
-              variant="secondary"
-              className="text-sm font-medium rounded-full py-1"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>{" "}
-              Dashboard
-            </Badge>
+
+          <div className="flex flex-col items-center justify-center gap-6 mb-8">
+            <div className="flex items-center justify-center gap-4">
+              <Identity address={useAccount().address}>
+                <Avatar className="h-12 w-12 ring-2 ring-primary/20" />
+                <div className="flex flex-col">
+                  <Name className="text-lg font-semibold text-foreground" />
+                  <span className="text-sm text-muted-foreground">Welcome back!</span>
+                </div>
+              </Identity>
+            </div>
+            <div className="text-center">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2">
+                Welcome to SavFe
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Your smart savings companion for a better financial future
+              </p>
+            </div>
           </div>
-          <h2 className="relative z-10 mx-auto max-w-4xl text-center text-2xl text-neutral-800 md:text-4xl lg:text-5xl dark:text-neutral-100">
-            Your{" "}
-            <div className="text-5xl font-bold">Savings Dashboard</div>
-          </h2>
         </div>
       </div>
 
@@ -198,7 +245,27 @@ export default function DashboardPage() {
             </p>
           </div>
 
+
+
           {/* Tab Content */}
+          {activeTab === "challenges" && (
+            <div className="space-y-8">
+              <SavingsChallenges />
+            </div>
+          )}
+
+          {activeTab === "ai-suggestions" && (
+            <div className="space-y-8">
+              <AISavingsSuggestions />
+            </div>
+          )}
+
+          {activeTab === "badges" && (
+            <div className="space-y-8">
+              <NFTGallery />
+            </div>
+          )}
+
           {activeTab === "group" && (
             <div className="space-y-8">
               {/* Group Savings Overview */}
@@ -312,7 +379,7 @@ export default function DashboardPage() {
 
                 <div className="lg:col-span-1 space-y-6">
                   <CreateGroup />
-                  <JoinGroup />
+
                 </div>
               </div>
 
@@ -354,8 +421,31 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
+              {/* Emergency Withdraw - Critical Feature */}
+              <EmergencyWithdraw />
+
               {/* Penalty Calculator - Educational Tool */}
               <PenaltyCalculator />
+
+              {/* Swap Component - Token Exchange */}
+              <Card className="gradient-card-hover">
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold">Token Swap</CardTitle>
+                      <CardDescription>Exchange tokens before depositing into savings</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Swap />
+                </CardContent>
+              </Card>
 
               {/* Transaction History - Historical Data (Bottom) */}
               <TransactionHistory />

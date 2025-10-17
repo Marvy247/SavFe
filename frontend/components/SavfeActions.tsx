@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract, useConnect } from "wagmi";
 import { SAVFE_ABI, SAVFE_ADDRESS, CHILD_SAVFE_ABI } from "../lib/contract";
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import toast from "react-hot-toast";
 import {
   Card,
@@ -17,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import IncrementSaving from "./IncrementSaving";
 import WithdrawSaving from "./WithdrawSaving";
 import { useQueryClient } from "@tanstack/react-query";
+import TokenSelector from "./TokenSelector";
 
 export default function SavfeActions() {
   const [joinAmount, setJoinAmount] = useState<string>("");
@@ -28,14 +30,15 @@ export default function SavfeActions() {
   const [safeMode, setSafeMode] = useState<boolean>(false);
 
   const { address } = useAccount();
+  const { connect, connectors } = useConnect();
   const queryClient = useQueryClient();
 
   // Check if user has joined SavFe (has child contract)
   const { data: childContractAddress, refetch: refetchChildContract } = useReadContract({
     address: SAVFE_ADDRESS,
     abi: SAVFE_ABI,
-    functionName: 'getUserChildContractAddressByAddress',
-    args: address ? [address] : [],
+    functionName: 'getUserChildContractAddress',
+    args: [],
   });
 
   const {
@@ -117,80 +120,29 @@ export default function SavfeActions() {
     }
   };
 
-  const handleCreateSaving = async () => {
-    console.log("handleCreateSaving called");
+  const joinSavfeCalls = joinAmount ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "joinSavfe",
+    value: BigInt(Math.floor(parseFloat(joinAmount) * 10 ** 18)),
+  }] : [];
 
-    // Check if wallet is connected
-    if (!address) {
-      console.log("No wallet address found");
-      toast.error("Please connect your wallet first.");
-      return;
-    }
-
-    // Check if user has joined SavFe
-    console.log("Checking child contract address:", childContractAddress);
-    if (!childContractAddress || childContractAddress === "0x0000000000000000000000000000000000000000") {
-      console.log("User hasn't joined SavFe:", childContractAddress);
-      toast.error("You must join SavFe before creating a saving. Please join SavFe first.");
-      return;
-    }
-
-    // Validate required fields
-    if (!savingName.trim()) {
-      console.log("Saving name is empty");
-      toast.error("Please enter a saving name.");
-      return;
-    }
-    if (!maturityTime || parseInt(maturityTime) <= 0) {
-      console.log("Invalid maturity time:", maturityTime);
-      toast.error("Please enter a valid maturity time.");
-      return;
-    }
-    if (!savingAmount || parseFloat(savingAmount) <= 0) {
-      console.log("Invalid saving amount:", savingAmount);
-      toast.error("Please enter a valid saving amount.");
-      return;
-    }
-
-    const maturityTimestamp = Math.floor(Date.now() / 1000) + (parseInt(maturityTime) * 24 * 60 * 60); // Convert days to seconds
-    const tokenToSave = tokenAddress || "0x0000000000000000000000000000000000000000"; // address(0) for native token
-
-    // Convert saving amount to wei if it's ETH
-    const savingAmountWei = tokenToSave === "0x0000000000000000000000000000000000000000"
-      ? BigInt(Math.floor(parseFloat(savingAmount) * 10 ** 18))
-      : BigInt(savingAmount);
-
-    console.log("Creating saving with params:", {
+  const createSavingCalls = (savingName && maturityTime && penaltyPercentage && savingAmount) ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "createSaving",
+    args: [
       savingName,
-      maturityTimestamp,
-      penaltyPercentage,
+      BigInt(Math.floor(Date.now() / 1000) + (parseInt(maturityTime) * 24 * 60 * 60)),
+      BigInt(penaltyPercentage),
       safeMode,
-      tokenToSave,
-      savingAmountWei,
-      value: tokenToSave === "0x0000000000000000000000000000000000000000" ? savingAmountWei : BigInt(0),
-    });
+      tokenAddress || "0x0000000000000000000000000000000000000000",
+      BigInt(tokenAddress ? savingAmount : Math.floor(parseFloat(savingAmount) * 10 ** 18)),
+    ],
+    value: tokenAddress ? BigInt(0) : BigInt(Math.floor(parseFloat(savingAmount) * 10 ** 18)),
+  }] : [];
 
-    try {
-      const result = writeContract({
-        address: SAVFE_ADDRESS,
-        abi: SAVFE_ABI,
-        functionName: "createSaving",
-        args: [
-          savingName,
-          BigInt(maturityTimestamp),
-          BigInt(penaltyPercentage),
-          safeMode,
-          tokenToSave,
-          savingAmountWei,
-        ],
-        value: tokenToSave === "0x0000000000000000000000000000000000000000" ? savingAmountWei : BigInt(0),
-      });
-      console.log("writeContract result:", result);
-    } catch (error) {
-      console.error("Error calling writeContract:", error);
-      toast.error("Failed to initiate transaction. Please try again.");
-    }
-  };
+
 
   const isLoading = isWriting || isConfirming;
 
@@ -249,23 +201,29 @@ export default function SavfeActions() {
             </div>
           </div>
 
-          <Button
-            onClick={handleJoinSavfe}
-            disabled={!joinAmount || isLoading}
-            className="w-full"
-            size="lg"
+          <Transaction
+            calls={joinSavfeCalls}
+            // isSponsored={true} // Enable gasless transactions when paymaster is available
+            onSuccess={(response) => {
+              console.log('Join SavFe transaction successful:', response);
+              toast.success('Successfully joined SavFe!');
+              // Refetch child contract address after joining
+              setTimeout(async () => {
+                const refetchResult = await refetchChildContract();
+                console.log("Child contract address after refetch:", refetchResult.data);
+              }, 2000);
+            }}
+            onError={(error) => {
+              console.error('Join SavFe transaction failed:', error);
+              toast.error('Failed to join SavFe. Please try again.');
+            }}
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                <span>
-                  {isWriting ? "Confirm in Wallet..." : "Joining Savfe..."}
-                </span>
-              </div>
-            ) : (
-              "Join Savfe"
-            )}
-          </Button>
+            <TransactionButton
+              disabled={!joinAmount}
+              className="w-full"
+              text="Join Savfe"
+            />
+          </Transaction>
         </CardContent>
       </Card>
 
@@ -379,17 +337,15 @@ export default function SavfeActions() {
                 htmlFor="tokenAddress"
                 className="text-sm font-semibold text-card-foreground"
               >
-                Token Address (Optional)
+                Token (Optional)
               </Label>
-              <Input
-                id="tokenAddress"
-                type="text"
+              <TokenSelector
                 value={tokenAddress}
-                onChange={(e) => setTokenAddress(e.target.value)}
-                placeholder="0x0000000000000000000000000000000000000000 (for ETH)"
+                onChange={setTokenAddress}
+                className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Leave empty for ETH or enter ERC20 token address
+                Select token for savings or leave as ETH
               </p>
             </div>
 
@@ -413,23 +369,23 @@ export default function SavfeActions() {
             </p>
           </div>
 
-          <Button
-            onClick={handleCreateSaving}
-            disabled={!savingName || !maturityTime || !penaltyPercentage || !savingAmount || isLoading}
-            className="w-full"
-            size="lg"
+          <Transaction
+            calls={createSavingCalls}
+            onSuccess={(response) => {
+              console.log('Create Saving transaction successful:', response);
+              toast.success('Saving created successfully!');
+            }}
+            onError={(error) => {
+              console.error('Create Saving transaction failed:', error);
+              toast.error('Failed to create saving. Please try again.');
+            }}
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                <span>
-                  {isWriting ? "Confirm in Wallet..." : "Creating Saving..."}
-                </span>
-              </div>
-            ) : (
-              "Create Saving"
-            )}
-          </Button>
+            <TransactionButton
+              disabled={!savingName || !maturityTime || !penaltyPercentage || !savingAmount}
+              className="w-full"
+              text="Create Saving"
+            />
+          </Transaction>
         </CardContent>
       </Card>
 
@@ -451,7 +407,7 @@ export default function SavfeActions() {
           </svg>
           <span>Transaction: </span>
           <a
-            href={`https://sepolia-blockscout.lisk.com/tx/${txHash}`}
+            href={`https://sepolia.basescan.org/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline font-mono"

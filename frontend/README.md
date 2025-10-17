@@ -1,6 +1,6 @@
 # SavFe - Smarter and Secure Protocol
 
-A decentralized application for rotating savings groups built on Lisk Sepolia testnet.
+A decentralized application for rotating savings groups built on Base Sepolia testnet.
 
 ## Features
 

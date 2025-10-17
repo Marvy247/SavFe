@@ -1,124 +1,183 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import { 
+  Wallet, 
+  WalletDropdown, 
+  WalletDropdownDisconnect,
+  WalletDropdownLink,
+  ConnectWallet
+} from '@coinbase/onchainkit/wallet';
+import { 
+  Identity, 
+  Name, 
+  Avatar, 
+  Address 
+} from '@coinbase/onchainkit/identity';
+import { FundButton } from '@coinbase/onchainkit/fund';
+import { useAccount } from "wagmi";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const WalletCard = () => {
-  const { address, isConnected } = useAccount();
-  const { connectors, connect } = useConnect();
-  const { disconnect } = useDisconnect();
-  const [isClient, setIsClient] = useState(false);
+  const { address, isConnected, isConnecting } = useAccount();
+  const [showFundCard, setShowFundCard] = useState(false);
 
-  // Fix hydration mismatch by only showing connection status after client mount
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const formatAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
-
-  // Only show connected state after client mount to prevent hydration mismatch
-  if (isClient && isConnected) {
+  if (isConnecting) {
     return (
-      <>
-        {/* Desktop/Tablet: Show address badge and disconnect button */}
-        <div className="hidden md:flex items-center space-x-2">
-          <Badge
-            variant="outline"
-            className="bg-secondary/50 border-primary/20 text-foreground font-mono text-sm px-3 py-1"
-          >
-            <div className="h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></div>
-            {formatAddress(address!)}
-          </Badge>
-          <Button
-            onClick={() => disconnect()}
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            aria-label="Disconnect wallet"
-          >
-            Disconnect
-          </Button>
-        </div>
+      <Card className="w-full max-w-md">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+            <span className="text-sm text-muted-foreground">Connecting wallet...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-        {/* Mobile: Show dropdown menu with disconnect option */}
-        <div className="md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
-                {formatAddress(address!)}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={() => disconnect()}
-                className="text-destructive focus:text-destructive cursor-pointer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="mr-2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-                Disconnect Wallet
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </>
+  if (!isConnected) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Connect your wallet to access SavFe features
+              </p>
+            </div>
+            <ConnectWallet />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          {/* <Wallet className="h-4 w-4" /> */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            fill="currentColor"
-            viewBox="0 0 256 256"
+    <div className="w-full max-w-md space-y-4">
+      <Wallet>
+        <ConnectWallet>
+          <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-card hover:bg-accent transition-colors">
+            <Identity address={address} className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10" />
+              <div className="flex flex-col">
+                <Name className="font-semibold text-sm" />
+                <Address className="text-xs text-muted-foreground" />
+              </div>
+            </Identity>
+            <Badge variant="secondary" className="ml-auto">
+              Connected
+            </Badge>
+          </div>
+        </ConnectWallet>
+        
+        <WalletDropdown>
+          <Identity address={address} hasCopyAddressOnClick>
+            <Avatar />
+            <Name />
+            <Address />
+          </Identity>
+          
+          <WalletDropdownLink
+            icon="wallet"
+            href="https://keys.coinbase.com"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <path d="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,128H56a8,8,0,0,1-8-8V78.63A23.84,23.84,0,0,0,56,80H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,132Z"></path>
-          </svg>
-          Connect Wallet
-          <ChevronDown className="h-4 w-4" />
+            Wallet Settings
+          </WalletDropdownLink>
+          
+          <WalletDropdownLink
+            icon="activity"
+            href={`https://sepolia.basescan.org/address/${address}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Explorer
+          </WalletDropdownLink>
+          
+          <WalletDropdownDisconnect />
+        </WalletDropdown>
+      </Wallet>
+
+      {/* Fund Wallet Button */}
+      <div className="flex items-center justify-center">
+        <FundButton
+          fiatCurrency="USD"
+          openIn="popup"
+          popupSize="md"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium cursor-pointer"
+        >
+          💰 Fund Wallet
+        </FundButton>
+      </div>
+    </div>
+  );
+};
+
+// Compact version for header/navbar with Fund button
+export const WalletCardCompact = () => {
+  const { address, isConnected } = useAccount();
+
+  if (!isConnected) {
+    return (
+      <ConnectWallet>
+        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+          Connect
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {connectors.map((connector) => (
-          <DropdownMenuItem
-            key={connector.uid}
-            onClick={() => connect({ connector })}
-            className="cursor-pointer"
+      </ConnectWallet>
+    );
+  }
+
+  return (
+    <>
+      <Wallet>
+        <ConnectWallet>
+          <Identity address={address} className="flex items-center space-x-2 px-2 py-1.5 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer">
+            <Avatar className="h-6 w-6" />
+            <Name className="hidden sm:block text-sm font-medium text-foreground" />
+          </Identity>
+        </ConnectWallet>
+
+        <WalletDropdown>
+          <Identity address={address} hasCopyAddressOnClick>
+            <Avatar className="h-8 w-8" />
+            <Name />
+            <Address />
+          </Identity>
+
+          <WalletDropdownLink
+            icon="wallet"
+            href="https://keys.coinbase.com"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            {connector.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            Wallet Settings
+          </WalletDropdownLink>
+
+          <WalletDropdownLink
+            icon="activity"
+            href={`https://sepolia.basescan.org/address/${address}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Explorer
+          </WalletDropdownLink>
+
+          <WalletDropdownDisconnect />
+        </WalletDropdown>
+      </Wallet>
+
+      {/* Fund Button */}
+      <FundButton
+        fiatCurrency="USD"
+        openIn="popup"
+        popupSize="md"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-1 rounded text-sm font-medium transition-colors cursor-pointer"
+      >
+        Fund
+      </FundButton>
+    </>
   );
 };

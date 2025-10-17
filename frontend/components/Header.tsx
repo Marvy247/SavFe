@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useAccount, useReadContract } from "wagmi";
-import { WalletCard } from "./WalletCard";
+import { WalletCardCompact } from "./WalletCard";
 import MobileMenu from "./MobileMenu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "./theme-toggle";
+import { Button } from "@/components/ui/button";
 import { SAVFE_ABI, SAVFE_ADDRESS } from "@/lib/contract";
 
 
@@ -98,7 +99,7 @@ export default function Header() {
               <Separator orientation="vertical" className="h-6" />
 
               <a
-                href="https://sepolia-blockscout.lisk.com/"
+                href="https://sepolia.basescan.org/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
@@ -108,7 +109,7 @@ export default function Header() {
               </a>
 
             <a
-              href="https://docs.lisk.com/"
+              href="https://docs.base.org/"
               target="_blank"
               rel="noopener noreferrer"
               className="group relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
@@ -129,7 +130,7 @@ export default function Header() {
         </div>
 
           {/* Right side - Stats, Wallet and Mobile Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             {/* Connection Status - Only show after client mount to prevent hydration mismatch */}
             {isClient && isConnected && (
               <div className="hidden md:flex items-center space-x-2">
@@ -144,21 +145,33 @@ export default function Header() {
             )}
 
             {/* Network Status */}
-            <div className="hidden sm:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-2">
               <Badge variant="outline" className="text-xs">
                 <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
-                Lisk
+                Base
               </Badge>
             </div>
 
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            {/* Desktop only: Theme Toggle, Notification Bell, and Wallet */}
+            <div className="hidden md:flex items-center space-x-2">
+              <ThemeToggle />
 
-            {/* Wallet Connection */}
-            <div className="flex items-center space-x-2">
-              <WalletCard />
-              <MobileMenu />
+              {/* Notification Bell */}
+              <Button variant="outline" size="icon" className="relative hidden lg:flex">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM15 17H9a6 6 0 01-6-6V9a6 6 0 0110.29-4.12L15 9v8z" />
+                </svg>
+                {/* Notification badge */}
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
+                  3
+                </span>
+              </Button>
+
+              <WalletCardCompact />
             </div>
+
+            {/* Mobile Menu */}
+            <MobileMenu />
           </div>
         </div>
       </div>

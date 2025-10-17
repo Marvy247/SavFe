@@ -1,5 +1,8 @@
 "use client";
 import React, { useState } from "react";
+import { WalletCardCompact } from "./WalletCard";
+import { ThemeToggle } from "./theme-toggle";
+import { Button } from "@/components/ui/button";
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -150,6 +153,32 @@ export default function MobileMenu() {
                   </svg>
                   <span className="font-medium">Explorer</span>
                 </a>
+
+                {/* Wallet and Theme in Mobile Menu */}
+                <div className="pt-4 border-t border-border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Wallet</span>
+                    <div className="flex-shrink-0">
+                      <WalletCardCompact />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Notifications</span>
+                    <Button variant="outline" size="icon" className="relative h-8 w-8">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM15 17H9a6 6 0 01-6-6V9a6 6 0 0110.29-4.12L15 9v8z" />
+                      </svg>
+                      {/* Notification badge */}
+                      <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
+                        3
+                      </span>
+                    </Button>
+                  </div>
+                </div>
               </nav>
 
               {/* Footer */}

@@ -354,7 +354,7 @@ export default function WithdrawSavingModal({
                 </svg>
                 <span>Transaction: </span>
                 <a
-                  href={`https://sepolia-blockscout.lisk.com/tx/${txHash}`}
+                  href={`https://sepolia.basescan.org/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline font-mono text-xs"
