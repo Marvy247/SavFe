@@ -61,10 +61,10 @@ export async function readGroupData(groupId: number) {
   }
 }
 
-// Utility function to read Savfe data
-export async function readSavfeData() {
+// Utility function to read PiggySavfe data
+export async function readPiggySavfeData() {
   try {
-    // Read some example data from the Savfe contract
+    // Read some example data from the PiggySavfe contract
     const joinLimitFee = await publicClient.readContract({
       address: SAVFE_ADDRESS,
       abi: SAVFE_ABI,

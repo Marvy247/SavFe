@@ -63,7 +63,7 @@ export default function Header() {
                 </div>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-foreground">SavFe</h1>
+                <h1 className="text-xl font-bold text-foreground">PiggySavfe</h1>
                 <p className="text-xs text-muted-foreground font-medium">
                   Smarter and Secure
                 </p>

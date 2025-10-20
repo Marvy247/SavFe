@@ -37,7 +37,7 @@ export default function LandingPage() {
             </Badge>
           </div>
           <h2 className="relative z-10 mx-auto max-w-4xl text-center text-2xl text-neutral-800 md:text-4xl lg:text-7xl dark:text-neutral-100">
-            SavFe Smarter
+            PiggySavfe Smarter
             <div className="text-7xl font-bold">Simple, Secure, and Transparent</div>
           </h2>
           <p className="relative z-10 mx-auto mt-4 max-w-2xl text-center text-balance text-base text-neutral-800 dark:text-neutral-500">
@@ -77,7 +77,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose SavFe?
+              Why Choose PiggySavfe?
             </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Experience the future of savings with blockchain-powered trust and transparency

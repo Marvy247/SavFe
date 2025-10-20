@@ -92,9 +92,12 @@ export default function Footer() {
       "fc:frame:button:1": "View Profile",
       "fc:frame:button:1:action": "link",
       "fc:frame:button:1:target": card.url,
-      "fc:frame:button:2": "Join SavFe",
-      "fc:frame:button:2:action": "link",
-      "fc:frame:button:2:target": `${card.url}/dashboard`,
+                      "fc:frame:button:2": "Join PiggySavfe",
+                      "fc:frame:button:2:action": "link",
+                      "fc:frame:button:2:target": `${card.url}/dashboard`,
+                      "fc:frame:button:3": "Join PiggySavfe",
+                      "fc:frame:button:3:action": "link",
+                      "fc:frame:button:3:target": `${card.url}/landing`,
     };
   };
 
@@ -130,7 +133,7 @@ export default function Footer() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">SavFe</h3>
+                  <h3 className="text-xl font-bold text-foreground">PiggySavfe</h3>
                   <p className="text-sm text-muted-foreground">Smarter and Secure</p>
                 </div>
               </div>
@@ -267,9 +270,9 @@ export default function Footer() {
                     <div className="flex items-start space-x-3">
                       <div className="text-4xl">🎉</div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-sm mb-1">SavFe Achievement</h4>
+                        <h4 className="font-semibold text-sm mb-1">PiggySavfe Achievement</h4>
                         <p className="text-xs text-muted-foreground mb-2">
-                          {shareMessage || "I'm building wealth with SavFe - Join the decentralized savings revolution!"}
+                          {shareMessage || "I'm building wealth with PiggySavfe - Join the decentralized savings revolution!"}
                         </p>
                         <div className="flex items-center space-x-2">
                           <Badge variant="secondary" className="text-xs">

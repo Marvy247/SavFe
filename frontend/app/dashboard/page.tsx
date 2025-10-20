@@ -10,7 +10,7 @@ const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 import JoinGroup from "@/components/JoinGroup";
 import MyGroups from "@/components/MyGroups";
 import GroupCards from "@/components/GroupCards";
-import SavfeActions from "@/components/SavfeActions";
+import PiggySavfeActions from "@/components/PiggySavfeActions";
 import WithdrawEarnings from "@/components/WithdrawEarnings";
 import NFTGallery from "@/components/NFTGallery";
 import SavingsChallenges from "@/components/SavingsChallenges";
@@ -148,7 +148,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background dark:bg-black flex items-center justify-center">
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>Welcome to SavFe</CardTitle>
+            <CardTitle>Welcome to PiggySavfe</CardTitle>
             <CardDescription>Please connect your wallet to continue.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <SavfeActions />
+                  <PiggySavfeActions />
                 </CardContent>
               </Card>
               <CreateGroup />
