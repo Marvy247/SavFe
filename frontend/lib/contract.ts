@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createPublicClient, http } from "viem";
 import { baseSepolia } from "wagmi/chains";
 

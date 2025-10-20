@@ -1,6 +1,8 @@
 "use client";
 
 import { useAccount, useReadContract, usePublicClient, useWriteContract } from "wagmi";
+import { writeContract } from 'wagmi/actions';
+import { config } from "@/lib/wagmi";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -69,7 +71,7 @@ export default function NFTGallery() {
   const [isLoadingBadges, setIsLoadingBadges] = useState(true);
 
   const stakeBadge = (tokenId: number) => {
-    writeContract({
+    writeContract(config, {
       address: NFT_ADDRESS,
       abi: NFT_ABI,
       functionName: "stakeBadge",
@@ -78,7 +80,7 @@ export default function NFTGallery() {
   };
 
   const unstakeBadge = (tokenId: number) => {
-    writeContract({
+    writeContract(config, {
       address: NFT_ADDRESS,
       abi: NFT_ABI,
       functionName: "unstakeBadge",
@@ -87,7 +89,7 @@ export default function NFTGallery() {
   };
 
   const claimBadgeRewards = (tokenId: number) => {
-    writeContract({
+    writeContract(config, {
       address: NFT_ADDRESS,
       abi: NFT_ABI,
       functionName: "claimBadgeRewards",

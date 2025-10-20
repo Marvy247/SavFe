@@ -24,7 +24,7 @@ export default function GroupMessaging({ groupId }: { groupId: number }) {
     abi: FACTORY_ABI,
     functionName: "getGroupMessages",
     args: [BigInt(groupId)],
-  });
+  }) as { data: Message[] | undefined };
 
   const { writeContract } = useWriteContract();
 

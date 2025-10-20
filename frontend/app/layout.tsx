@@ -1,10 +1,10 @@
 'use client';
 
 declare global {
-  namespace JSX {
-    interface IntrinsicElements {
+  interface JSX {
+    IntrinsicElements: {
       'w3m-button': any;
-    }
+    };
   }
 }
 

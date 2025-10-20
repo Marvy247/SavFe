@@ -1,6 +1,7 @@
 "use client";
 import { writeContract } from 'wagmi/actions';
 import '@web3modal/wagmi/react';
+import { config } from "@/lib/wagmi";
 import CreateGroup from "@/components/CreateGroup";
 const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 import GroupExplorer from "@/components/GroupExplorer";
@@ -16,7 +17,7 @@ import SavingsChallenges from "@/components/SavingsChallenges";
 import AISavingsSuggestions from "@/components/AISavingsSuggestions";
 import EmergencyWithdraw from "@/components/EmergencyWithdraw";
 import DashboardHeader from "@/components/DashboardHeader";
-import JoinSavfeCard from "@/components/JoinSavfeCard";
+import JoinSavfeCard from "@/components/JoinPiggySavfeCard";
 
 import SavingsVisualization from "@/components/SavingsVisualization";
 const QuickActions = dynamic(() => import("@/components/QuickActions"), {
@@ -117,22 +118,6 @@ export default function DashboardPage() {
     }
   ];
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-background dark:bg-black flex items-center justify-center">
-        <Card className="w-full max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle>Welcome to SavFe</CardTitle>
-            <CardDescription>Please connect your wallet to continue.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <w3m-button size="md" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Auto-join user if they don't have a child contract
   React.useEffect(() => {
     if (address && (!childContractAddress || childContractAddress === "0x0000000000000000000000000000000000000000")) {
@@ -140,7 +125,7 @@ export default function DashboardPage() {
       const autoJoin = async () => {
         try {
           // Use wagmi to call joinSavfe
-          await writeContract({
+          await writeContract(config, {
             address: SAVFE_ADDRESS,
             abi: FACTORY_ABI,
             functionName: 'joinSavfe',
@@ -157,6 +142,23 @@ export default function DashboardPage() {
       autoJoin();
     }
   }, [address, childContractAddress, refetchChildContract]);
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-background dark:bg-black flex items-center justify-center">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Welcome to SavFe</CardTitle>
+            <CardDescription>Please connect your wallet to continue.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* @ts-expect-error: w3m-button is a custom element from web3modal */}
+            <w3m-button size="md" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background dark:bg-black">

@@ -353,7 +353,7 @@ export default function SavingsDashboard() {
         isOpen={isIncrementModalOpen}
         onClose={closeIncrementModal}
         savingName={selectedSavingName}
-        tokenAddress={null}
+        tokenAddress=""
       />
       <WithdrawSavingModal
         isOpen={isWithdrawModalOpen}
