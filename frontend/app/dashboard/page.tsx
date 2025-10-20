@@ -1,22 +1,24 @@
 "use client";
 import CreateGroup from "@/components/CreateGroup";
-import EarningsDisplay from "@/components/EarningsDisplay";
 const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 import GroupExplorer from "@/components/GroupExplorer";
 import GroupsTable from "@/components/GroupsTable";
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 import JoinGroup from "@/components/JoinGroup";
+import MyGroups from "@/components/MyGroups";
+import GroupCards from "@/components/GroupCards";
 import SavfeActions from "@/components/SavfeActions";
 import WithdrawEarnings from "@/components/WithdrawEarnings";
-import AdminWithdrawEarnings from "@/components/AdminWithdrawEarnings";
 import NFTGallery from "@/components/NFTGallery";
 import SavingsChallenges from "@/components/SavingsChallenges";
 import AISavingsSuggestions from "@/components/AISavingsSuggestions";
 import EmergencyWithdraw from "@/components/EmergencyWithdraw";
 
-import PenaltyCalculator from "@/components/PenaltyCalculator";
-import TransactionHistory from "@/components/TransactionHistory";
 import SavingsVisualization from "@/components/SavingsVisualization";
+const QuickActions = dynamic(() => import("@/components/QuickActions"), {
+  ssr: false,
+  loading: () => null,
+});
 const Identity = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Identity), { ssr: false });
 const Avatar = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Avatar), { ssr: false });
 const Name = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Name), { ssr: false });
@@ -34,7 +36,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
+import { TrendingUp, CheckCircle, Target } from "lucide-react";
 import Link from "next/link";
 
 import { useAccount, useReadContract } from "wagmi";
@@ -128,7 +132,7 @@ export default function DashboardPage() {
     loadGroupsData();
   }, [groupCounter]);
 
-  const UserStatistics = dynamic(() => import("@/components/UserStatistics"), {
+  const SavingsOverview = dynamic(() => import("@/components/SavingsOverview"), {
     ssr: false,
     loading: () => <div>Loading...</div>,
   });
@@ -257,6 +261,64 @@ export default function DashboardPage() {
           {activeTab === "ai-suggestions" && (
             <div className="space-y-8">
               <AISavingsSuggestions />
+
+              {/* Success Metrics Section */}
+              <Card className="gradient-card-hover">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                    <CardTitle className="text-xl">Your Savings Success</CardTitle>
+                  </div>
+                  <CardDescription>Track your progress and achievements</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-primary mb-2">$2,340</div>
+                      <div className="text-sm text-muted-foreground">Total Saved This Year</div>
+                      <div className="text-xs text-green-600 mt-1">+15% vs last year</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-primary mb-2">12</div>
+                      <div className="text-sm text-muted-foreground">Suggestions Applied</div>
+                      <div className="text-xs text-green-600 mt-1">80% implementation rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-primary mb-2">$480</div>
+                      <div className="text-sm text-muted-foreground">Monthly Savings</div>
+                      <div className="text-xs text-green-600 mt-1">From AI suggestions</div>
+                    </div>
+                  </div>
+
+                  <Separator className="my-6" />
+
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Recent Achievements</h4>
+                    <div className="grid gap-3">
+                      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">Budget Master</div>
+                          <div className="text-sm text-muted-foreground">Saved $150/month on coffee</div>
+                        </div>
+                        <Badge variant="secondary">+150 pts</Badge>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Target className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">Goal Crusher</div>
+                          <div className="text-sm text-muted-foreground">Emergency fund at 40%</div>
+                        </div>
+                        <Badge variant="secondary">+200 pts</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -268,11 +330,12 @@ export default function DashboardPage() {
 
           {activeTab === "group" && (
             <div className="space-y-8">
+              {/* My Groups - Personalized Section */}
+              <MyGroups />
+
               {/* Group Savings Overview */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
-                  <EarningsDisplay />
-
                   {/* Group Summary Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="gradient-card-hover">
@@ -285,7 +348,7 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Total Groups</p>
-                  <p className="text-2xl font-bold">{groups.length}</p>
+                            <p className="text-2xl font-bold">{groups.length}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -301,7 +364,7 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Total Pot Value</p>
-                  <p className="text-2xl font-bold">{totalPot} ETH</p>
+                            <p className="text-2xl font-bold">{totalPot} ETH</p>
                           </div>
                         </div>
                       </CardContent>
@@ -317,92 +380,42 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Active Members</p>
-                  <p className="text-2xl font-bold">{totalMembers}</p>
+                            <p className="text-2xl font-bold">{totalMembers}</p>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   </div>
 
-                  <Card className="gradient-card-hover">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="28"
-                            height="28"
-                            fill="currentColor"
-                            viewBox="0 0 256 256"
-                          >
-                            <path
-                              d="M192,112a80,80,0,1,1-80-80A80,80,0,0,1,192,112Z"
-                              opacity="0.2"
-                            ></path>
-                            <path d="M229.66,218.34,179.6,168.28a88.21,88.21,0,1,0-11.32,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
-                          </svg>
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg font-bold text-card-foreground">
-                            Group Explorer
-                          </CardTitle>
-                          <CardDescription className="text-sm text-muted-foreground">
-                            Browse and interact with savings groups
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
+                  {/* Browse Groups - Visual Card Layout */}
+                  <GroupCards />
 
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="groupId"
-                          className="text-sm font-semibold text-card-foreground"
-                        >
-                          Group ID
-                        </Label>
-                        <Input
-                          id="groupId"
-                          type="number"
-                          value={gid}
-                          onChange={(e) => setGid(Number(e.target.value))}
-                          min="0"
-                          className="w-full"
-                        />
-                      </div>
-                      <GroupExplorer groupId={gid} />
-                    </CardContent>
-                  </Card>
-
-                  <WithdrawEarnings />
+                  {/* Alternative Table View */}
+                  <GroupsTable />
                 </div>
 
                 <div className="lg:col-span-1 space-y-6">
                   <CreateGroup />
-
                 </div>
               </div>
-
-              <GroupsTable />
             </div>
           )}
 
           {activeTab === "individual" && (
             <div className="max-w-7xl mx-auto space-y-8">
-              {/* User Statistics - Overview First */}
-              <UserStatistics />
+              {/* Savings Overview - Overview First */}
+              <SavingsOverview />
 
               {/* Savings Dashboard - Current State */}
-              <SavingsDashboard />
-
-              {/* Admin Withdraw Earnings - Platform Admin Only */}
-              <AdminWithdrawEarnings />
+              <div id="savings-dashboard">
+                <SavingsDashboard />
+              </div>
 
               {/* Savings Visualization - Analytics & Progress */}
               <SavingsVisualization />
 
               {/* Savfe Actions - Main Actions (Prominent Position) */}
-              <Card className="gradient-card-hover">
+              <Card id="savfe-actions" className="gradient-card-hover">
                 <CardHeader>
                   <div className="flex items-center space-x-3">
                     <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -422,10 +435,9 @@ export default function DashboardPage() {
               </Card>
 
               {/* Emergency Withdraw - Critical Feature */}
-              <EmergencyWithdraw />
-
-              {/* Penalty Calculator - Educational Tool */}
-              <PenaltyCalculator />
+              <div id="emergency-withdraw">
+                <EmergencyWithdraw />
+              </div>
 
               {/* Swap Component - Token Exchange */}
               <Card className="gradient-card-hover">
@@ -447,8 +459,21 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Transaction History - Historical Data (Bottom) */}
-              <TransactionHistory />
+              {/* Quick Actions Floating Bar */}
+              <QuickActions
+                onCreateSaving={() => {
+                  // Scroll to SavfeActions component
+                  document.getElementById('savfe-actions')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                onEmergencyWithdraw={() => {
+                  // Scroll to EmergencyWithdraw component
+                  document.getElementById('emergency-withdraw')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                onIncrementSaving={() => {
+                  // Could open a modal or scroll to increment options
+                  document.getElementById('savings-dashboard')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              />
             </div>
           )}
         </div>
