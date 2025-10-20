@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract } from "wagmi";
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
+import { useAccount, useReadContract } from "wagmi";
 import { SAVFE_ABI, SAVFE_ADDRESS, CHILD_SAVFE_ABI } from "../lib/contract";
 import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -53,49 +55,38 @@ export default function IncrementSaving() {
 
   const queryClient = useQueryClient();
 
-  const {
-    writeContract,
-    data: txHash,
-    isPending: isWriting,
-    error,
-  } = useWriteContract();
-
-  // Wait for transaction to be mined
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
-
-  // Invalidate queries when transaction is successful
-  React.useEffect(() => {
-    if (isSuccess) {
-      queryClient.invalidateQueries({ queryKey: ["getSavingsNames"] });
-      queryClient.invalidateQueries({ queryKey: ["getSaving"] });
-      queryClient.invalidateQueries({ queryKey: ["getUserChildContractAddress"] });
-    }
-  }, [isSuccess, queryClient]);
-
-  const handleIncrementSaving = async () => {
-    const tokenToRetrieve = tokenAddress || "0x0000000000000000000000000000000000000000"; // address(0) for native token
-
-    // Convert incrementAmount to wei if ETH
-    const incrementAmountWei = tokenToRetrieve === "0x0000000000000000000000000000000000000000"
+  const incrementSavingCalls = (savingName && incrementAmount && tokenAddress) ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "incrementSaving",
+    args: [
+      savingName,
+      tokenAddress || "0x0000000000000000000000000000000000000000",
+      tokenAddress === "0x0000000000000000000000000000000000000000"
+        ? BigInt(Math.floor(parseFloat(incrementAmount) * 10 ** 18))
+        : BigInt(Math.floor(parseFloat(incrementAmount))),
+    ],
+    value: tokenAddress === "0x0000000000000000000000000000000000000000"
       ? BigInt(Math.floor(parseFloat(incrementAmount) * 10 ** 18))
-      : BigInt(incrementAmount);
+      : BigInt(0),
+  }] : [];
 
-    writeContract({
-      address: SAVFE_ADDRESS,
-      abi: SAVFE_ABI,
-      functionName: "incrementSaving",
-      args: [
-        savingName,
-        tokenToRetrieve,
-        incrementAmountWei,
-      ],
-      value: tokenToRetrieve === "0x0000000000000000000000000000000000000000" ? incrementAmountWei : BigInt(0),
-    });
+  const handleIncrementSavingSuccess = (response: any) => {
+    console.log('Increment saving successful:', response);
+    toast.success('Saving incremented successfully!');
+    queryClient.invalidateQueries({ queryKey: ["getSavingsNames"] });
+    queryClient.invalidateQueries({ queryKey: ["getSaving"] });
+    queryClient.invalidateQueries({ queryKey: ["getUserChildContractAddress"] });
   };
 
-  const isLoading = isWriting || isConfirming;
+  const handleIncrementSavingError = (error: any) => {
+    console.error('Increment saving failed:', error);
+    toast.error('Failed to increment saving. Please try again.');
+  };
+
+
+
+  const isLoading = false; // Transaction component handles loading state
 
   return (
     <Card className="gradient-card-hover animate-fade-in">
@@ -187,92 +178,20 @@ export default function IncrementSaving() {
           </p>
         </div>
 
-        <Button
-          onClick={handleIncrementSaving}
-          disabled={!savingName || !incrementAmount || isLoading}
-          className="w-full"
-          size="lg"
+        <Transaction
+          calls={incrementSavingCalls}
+          onSuccess={handleIncrementSavingSuccess}
+          onError={handleIncrementSavingError}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-              <span>
-                {isWriting ? "Confirm in Wallet..." : "Incrementing Saving..."}
-              </span>
-            </div>
-          ) : (
-            "Increment Saving"
-          )}
-        </Button>
+          <TransactionButton
+            disabled={!savingName || !incrementAmount}
+            className="w-full"
+            text="Increment Saving"
+          />
+        </Transaction>
       </CardContent>
 
-      {/* Status Messages */}
-      {txHash && (
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground bg-muted p-3 rounded-lg mx-6 mb-4">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Transaction: </span>
-          <a
-            href={`https://sepolia.basescan.org/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-mono"
-          >
-            {txHash.slice(0, 8)}...{txHash.slice(-6)}
-          </a>
-        </div>
-      )}
 
-      {isSuccess && (
-        <div className="flex items-center space-x-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200 mx-6 mb-4">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span>Saving incremented successfully!</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-start space-x-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20 mx-6 mb-4">
-          <svg
-            className="h-4 w-4 mt-0.5 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="break-all">
-            Error: {error.message.split("\n")[0]}
-          </span>
-        </div>
-      )}
     </Card>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { FACTORY_ABI, FACTORY_ADDRESS } from "../lib/contract";
+import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -18,47 +19,29 @@ export default function CreateGroup() {
   const [amount, setAmount] = useState<string>("");
   const [period, setPeriod] = useState<string>("");
 
-  const {
-    writeContract,
-    data: txHash,
-    isPending: isWriting,
-    error,
-  } = useWriteContract();
+  const createGroupCalls = (amount && period) ? [{
+    to: FACTORY_ADDRESS as `0x${string}`,
+    abi: FACTORY_ABI,
+    functionName: "createGroup",
+    args: [
+      BigInt(Math.floor(parseFloat(amount) * 10 ** 18)),
+      BigInt(parseInt(period) * 24 * 60 * 60),
+    ],
+  }] : [];
 
-  // Wait for transaction to be mined
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
-
-  const handleCreateGroup = async () => {
-    // Validate inputs
-    const amountValue = parseFloat(amount);
-    const periodValue = parseInt(period);
-
-    if (isNaN(amountValue) || amountValue <= 0) {
-      alert("Please enter a valid amount greater than 0");
-      return;
-    }
-
-    if (isNaN(periodValue) || periodValue <= 0) {
-      alert("Please enter a valid period greater than 0 days");
-      return;
-    }
-
-    // Convert ETH amount to wei (1 ETH = 10^18 wei)
-    const amountWei = BigInt(Math.floor(amountValue * 10 ** 18));
-    // Convert period from days to seconds
-    const periodSeconds = BigInt(periodValue * 24 * 60 * 60);
-
-    writeContract({
-      address: FACTORY_ADDRESS,
-      abi: FACTORY_ABI,
-      functionName: "createGroup",
-      args: [amountWei, periodSeconds],
-    });
+  const handleCreateGroupSuccess = (response: any) => {
+    console.log('Create group successful:', response);
+    toast.success('Group created successfully!');
   };
 
-  const isLoading = isWriting || isConfirming;
+  const handleCreateGroupError = (error: any) => {
+    console.error('Create group failed:', error);
+    toast.error('Failed to create group. Please try again.');
+  };
+
+
+
+  const isLoading = false; // Transaction component handles loading state
 
   return (
     <Card className="gradient-card-hover animate-fade-in">
@@ -148,91 +131,19 @@ export default function CreateGroup() {
         </div>
 
         {/* Submit Button */}
-        <Button
-          onClick={handleCreateGroup}
-          disabled={!amount || !period || isLoading}
-          className="w-full"
-          size="lg"
+        <Transaction
+          calls={createGroupCalls}
+          onSuccess={handleCreateGroupSuccess}
+          onError={handleCreateGroupError}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-              <span>
-                {isWriting ? "Confirm in Wallet..." : "Creating Group..."}
-              </span>
-            </div>
-          ) : (
-            "Create Group"
-          )}
-        </Button>
+          <TransactionButton
+            disabled={!amount || !period}
+            className="w-full"
+            text="Create Group"
+          />
+        </Transaction>
 
-        {/* Status Messages */}
-        {txHash && (
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>Transaction: </span>
-            <a
-              href={`https://sepolia.basescan.org/tx/${txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline font-mono"
-            >
-              {txHash.slice(0, 8)}...{txHash.slice(-6)}
-            </a>
-          </div>
-        )}
 
-        {isSuccess && (
-          <div className="flex items-center space-x-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>Group created successfully!</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-start space-x-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20">
-            <svg
-              className="h-4 w-4 mt-0.5 flex-shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="break-all">
-              Error: {error.message.split("\n")[0]}
-            </span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

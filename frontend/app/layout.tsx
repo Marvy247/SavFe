@@ -1,4 +1,13 @@
 'use client';
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'w3m-button': any;
+    }
+  }
+}
+
 import '@coinbase/onchainkit/styles.css';
 import './globals.css';
 import { OnchainKitProvider } from '@coinbase/onchainkit';

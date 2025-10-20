@@ -1,14 +1,15 @@
 "use client";
 import React, { useState } from "react";
-import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
+import { useReadContract } from "wagmi";
 import { SAVFE_ABI, SAVFE_ADDRESS, CHILD_SAVFE_ABI } from "../lib/contract";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { formatEther } from "viem";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
 
 interface WithdrawSavingModalProps {
   isOpen: boolean;
@@ -33,52 +34,40 @@ export default function WithdrawSavingModal({
     args: [savingName],
   });
 
-  const {
-    writeContract,
-    data: txHash,
-    isPending: isWriting,
-    error,
-  } = useWriteContract();
+  const withdrawSavingCalls = savingName ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "withdrawSaving",
+    args: [savingName],
+  }] : [];
 
-  // Wait for transaction to be mined
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
-
-  // Close modal on successful transaction
-  React.useEffect(() => {
-    if (isSuccess) {
-      // Invalidate all relevant queries to refresh data across the app
-      queryClient.invalidateQueries({ queryKey: ['getSavingsNames'] });
-      queryClient.invalidateQueries({ queryKey: ['getSaving'] });
-      queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddressByAddress'] });
-      queryClient.invalidateQueries({ queryKey: ['userCount'] });
-      queryClient.invalidateQueries({ queryKey: ['contractEarnings'] });
-      queryClient.invalidateQueries({ queryKey: ['groupCounter'] });
-      queryClient.invalidateQueries({ queryKey: ['JoinLimitFee'] });
-      queryClient.invalidateQueries({ queryKey: ['SavingFee'] });
-      queryClient.invalidateQueries({ queryKey: ['fountain'] });
-
-      // Close modal after a short delay to show success message
-      setTimeout(() => {
-        handleClose();
-      }, 2000);
-    }
-  }, [isSuccess, queryClient]);
-
-  const handleWithdrawSaving = async () => {
-    try {
-      writeContract({
-        address: SAVFE_ADDRESS,
-        abi: SAVFE_ABI,
-        functionName: "withdrawSaving",
-        args: [savingName],
-      });
-    } catch (error) {
-      console.error("Error withdrawing saving:", error);
-      toast.error("Failed to withdraw saving. Please try again.");
-    }
+  const handleWithdrawSavingSuccess = (response: any) => {
+    console.log('Withdraw saving successful:', response);
+    toast.success('Saving withdrawn successfully!');
+    // Invalidate all relevant queries to refresh data across the app
+    queryClient.invalidateQueries({ queryKey: ['getSavingsNames'] });
+    queryClient.invalidateQueries({ queryKey: ['getSaving'] });
+    queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddressByAddress'] });
+    queryClient.invalidateQueries({ queryKey: ['userCount'] });
+    queryClient.invalidateQueries({ queryKey: ['contractEarnings'] });
+    queryClient.invalidateQueries({ queryKey: ['groupCounter'] });
+    queryClient.invalidateQueries({ queryKey: ['JoinLimitFee'] });
+    queryClient.invalidateQueries({ queryKey: ['SavingFee'] });
+    queryClient.invalidateQueries({ queryKey: ['fountain'] });
+    // Close modal after a short delay to show success message
+    setTimeout(() => {
+      handleClose();
+    }, 2000);
   };
+
+  const handleWithdrawSavingError = (error: any) => {
+    console.error('Withdraw saving failed:', error);
+    toast.error('Failed to withdraw saving. Please try again.');
+  };
+
+
+
+
 
   const handleClose = () => {
     onClose();
@@ -126,7 +115,7 @@ export default function WithdrawSavingModal({
     }
   };
 
-  const isLoading = isWriting || isConfirming;
+  const isLoading = false; // Transaction component handles loading state
   const maturityStatus = getMaturityStatus();
   const penaltyAmount = calculatePenalty();
   const netAmount = calculateNetAmount();
@@ -320,23 +309,17 @@ export default function WithdrawSavingModal({
                 >
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleWithdrawSaving}
-                  disabled={isLoading}
-                  className="flex-1"
-                  variant={penaltyAmount > 0 ? "destructive" : "default"}
+                <Transaction
+                  calls={withdrawSavingCalls}
+                  onSuccess={handleWithdrawSavingSuccess}
+                  onError={handleWithdrawSavingError}
                 >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                      <span>Withdrawing...</span>
-                    </div>
-                  ) : penaltyAmount > 0 ? (
-                    `Withdraw ${netAmount.toFixed(4)} ETH (with penalty)`
-                  ) : (
-                    `Withdraw ${netAmount.toFixed(4)} ETH`
-                  )}
-                </Button>
+                  <TransactionButton
+                    disabled={false}
+                    className="flex-1"
+                    text={penaltyAmount > 0 ? `Withdraw ${netAmount.toFixed(4)} ETH (with penalty)` : `Withdraw ${netAmount.toFixed(4)} ETH`}
+                  />
+                </Transaction>
               </div>
             </div>
           ) : (
@@ -345,49 +328,7 @@ export default function WithdrawSavingModal({
             </div>
           )}
 
-          {/* Status Messages */}
-          {txHash && (
-            <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
-              <div className="flex items-center space-x-2">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Transaction: </span>
-                <a
-                  href={`https://sepolia.basescan.org/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-mono text-xs"
-                >
-                  {txHash.slice(0, 8)}...{txHash.slice(-6)}
-                </a>
-              </div>
-            </div>
-          )}
 
-          {isSuccess && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-600">
-              <div className="flex items-center space-x-2">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Saving withdrawn successfully!</span>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-              <div className="flex items-start space-x-2">
-                <svg className="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-                <span className="break-all">
-                  Error: {error.message.split("\n")[0]}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

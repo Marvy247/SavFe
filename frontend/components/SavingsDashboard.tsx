@@ -17,12 +17,9 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lightbulb, TrendingUp, Target } from 'lucide-react';
+import { Lightbulb, TrendingUp, Target, Clock, Zap, Users } from 'lucide-react';
 import IncrementSavingModal from './IncrementSavingModal';
 import WithdrawSavingModal from './WithdrawSavingModal';
-import SavingsChallenges from './SavingsChallenges';
-import SavingsVisualization from './SavingsVisualization';
-import GroupActivityFeed from './GroupActivityFeed';
 import toast from 'react-hot-toast';
 
 interface SavingData {
@@ -42,8 +39,6 @@ const SavingCard = ({ name, childContractAddress, onIncrement, onWithdraw }: { n
     functionName: 'getSaving',
     args: [name],
   });
-
-
 
   if (isLoading) {
     return (
@@ -118,24 +113,13 @@ const SavingCard = ({ name, childContractAddress, onIncrement, onWithdraw }: { n
   const elapsed = Math.floor(Date.now() / 1000) - ((saving as any).createdAt || Math.floor(Date.now() / 1000) - 86400 * 30);
   const progressPercentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
 
-  // Debug logging for maturity time
-  console.log(`Saving "${name}":`, {
-    maturityTime: (saving as any).maturityTime,
-    currentTime: Math.floor(Date.now() / 1000),
-    timeRemaining,
-    isMatured: timeRemaining <= 0,
-    isValid: (saving as any).isValid,
-    progress: progressPercentage
-  });
-
-
-
   return (
-    <Card className="border-l-4 border-l-primary/20">
+    <Card className="border-l-4 border-l-primary/20 hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-card-foreground">
+            <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
               {name}
             </h3>
             <Badge className={`text-xs ${maturityStatus.color}`}>
@@ -152,22 +136,31 @@ const SavingCard = ({ name, childContractAddress, onIncrement, onWithdraw }: { n
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <p className="text-xs text-muted-foreground">Time Remaining</p>
-            <p className="text-sm font-medium">
-              {timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : 'Matured'}
-            </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 text-sm">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Time Remaining</p>
+              <p className="font-medium">
+                {timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : 'Matured'}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Penalty Rate</p>
-            <p className="text-sm font-medium">{Number((saving as any).penaltyPercentage)}%</p>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Penalty Rate</p>
+              <p className="font-medium">{Number((saving as any).penaltyPercentage)}%</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Status</p>
-            <p className="text-sm font-medium">
-              {(saving as any).isValid ? 'Active' : 'Completed'}
-            </p>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <div>
+                <p className="text-xs text-muted-foreground">Status</p>
+                <p className="font-medium">
+                {(saving as any).isValid ? 'Active' : 'Completed'}
+                </p>
+            </div>
           </div>
         </div>
 
@@ -314,26 +307,6 @@ export default function SavingsDashboard() {
 
   const isLoading = isLoadingSavingsNames || isFilteringSavings;
 
-  // Debug logging and force refetch if needed
-  React.useEffect(() => {
-    console.log('SavingsDashboard - childContractAddress:', childContractAddress);
-    console.log('SavingsDashboard - savingsNames:', savingsNames);
-
-    // If we have a child contract address but no savings names, try to refetch
-    if (childContractAddress && (!savingsNames || !(savingsNames as any).savingsNames || (savingsNames as any).savingsNames.length === 0)) {
-      console.log('SavingsDashboard - Forcing refetch of savings names');
-      refetchSavingsNames();
-    }
-  }, [childContractAddress, savingsNames, refetchSavingsNames]);
-
-  // Also refetch child contract address periodically or when needed
-  React.useEffect(() => {
-    if (address && !childContractAddress) {
-      console.log('SavingsDashboard - No child contract address, refetching...');
-      refetchChildContract();
-    }
-  }, [address, childContractAddress, refetchChildContract]);
-
   if (!address) {
     return (
       <div className="space-y-6">
@@ -346,7 +319,7 @@ export default function SavingsDashboard() {
     );
   }
 
-  if (isLoadingSavingsNames) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <Card className="animate-fade-in">
@@ -365,39 +338,7 @@ export default function SavingsDashboard() {
           <CardContent>
             <div className="space-y-4">
               {Array.from({ length: 2 }).map((_, i) => (
-                <Card key={i} className="border-l-4 border-l-primary/20">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <Skeleton className="h-6 w-32 mb-2" />
-                        <Skeleton className="h-5 w-20" />
-                      </div>
-                      <div className="text-right">
-                        <Skeleton className="h-8 w-16 mb-1" />
-                        <Skeleton className="h-4 w-12" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <Skeleton className="h-4 w-24 mb-1" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                      <div>
-                        <Skeleton className="h-4 w-20 mb-1" />
-                        <Skeleton className="h-4 w-8" />
-                      </div>
-                      <div>
-                        <Skeleton className="h-4 w-12 mb-1" />
-                        <Skeleton className="h-4 w-16" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-px w-full my-4" />
-                    <div className="flex space-x-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-8 w-20" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <SavingCard key={i} name="" childContractAddress="0x" onIncrement={() => {}} onWithdraw={() => {}} />
               ))}
             </div>
           </CardContent>
@@ -412,7 +353,7 @@ export default function SavingsDashboard() {
         isOpen={isIncrementModalOpen}
         onClose={closeIncrementModal}
         savingName={selectedSavingName}
-        tokenAddress={''}
+        tokenAddress={null}
       />
       <WithdrawSavingModal
         isOpen={isWithdrawModalOpen}
@@ -421,122 +362,56 @@ export default function SavingsDashboard() {
         childContractAddress={childContractAddress as `0x${string}`}
       />
 
-      <Tabs defaultValue="savings" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="savings">My Savings</TabsTrigger>
-          <TabsTrigger value="challenges">Challenges</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="savings" className="space-y-6">
-          <Card className="animate-fade-in">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      fill="currentColor"
-                      viewBox="0 0 256 256"
-                    >
-                      <path d="M200,80a56.06,56.06,0,0,0-56-56H112A56.06,56.06,0,0,0,56,80v96a16,16,0,0,0,16,16h8v16a8,8,0,0,1-16,0V192H56a32,32,0,0,1-32-32V80a72.08,72.08,0,0,1,72-72h32a72.08,72.08,0,0,1,72,72v96a32,32,0,0,1-32,32h-8v16a8,8,0,0,1-16,0V192h8A16,16,0,0,0,200,176Z"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg font-bold text-card-foreground">
-                      Your Savings Dashboard
-                    </CardTitle>
-                    <CardDescription className="text-sm text-muted-foreground">
-                      Track your savings goals and progress
-                    </CardDescription>
-                  </div>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {activeSavingsNames.length}
-                </Badge>
+      <Card className="animate-fade-in">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Target className="h-5 w-5 text-primary" />
               </div>
-            </CardHeader>
-
-            <CardContent>
-              {activeSavingsNames.length > 0 ? (
-                <div className="space-y-4">
-                  {activeSavingsNames.map((name: string) => (
-                    <SavingCard key={name} name={name} childContractAddress={childContractAddress as `0x${string}`} onIncrement={openIncrementModal} onWithdraw={openWithdrawModal} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <svg
-                    className="h-12 w-12 mx-auto mb-4 text-muted-foreground"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  <p className="text-lg font-medium">No savings yet</p>
-                  <p className="text-sm">Create your first savings goal to get started!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="challenges" className="space-y-6">
-          <SavingsChallenges />
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <SavingsVisualization />
-
-          {/* Mini AI Suggestions Widget */}
-          <Card className="gradient-card-hover">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Lightbulb className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Quick AI Insights</CardTitle>
+              <div>
+                <CardTitle className="text-lg font-bold text-card-foreground">
+                  Your Savings
+                </CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Track your savings goals and progress
+                </CardDescription>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">High-yield savings could earn you $216 more annually</span>
-                  </div>
-                  <Button size="sm" variant="ghost">View</Button>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm">Emergency fund target: $12,000 (currently 40%)</span>
-                  </div>
-                  <Button size="sm" variant="ghost">View</Button>
-                </div>
-              </div>
-              <Button variant="outline" className="w-full mt-4" onClick={() => {
-                // Navigate to AI suggestions tab
-                const aiTab = document.querySelector('[value="ai-suggestions"]') as HTMLElement;
-                if (aiTab) aiTab.click();
-              }}>
-                View All AI Suggestions
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {activeSavingsNames.length} Active
+            </Badge>
+          </div>
+        </CardHeader>
 
-        <TabsContent value="activity" className="space-y-6">
-          <GroupActivityFeed />
-        </TabsContent>
-      </Tabs>
+        <CardContent>
+          {activeSavingsNames.length > 0 ? (
+            <div className="space-y-4">
+              {activeSavingsNames.map((name: string) => (
+                <SavingCard key={name} name={name} childContractAddress={childContractAddress as `0x${string}`} onIncrement={openIncrementModal} onWithdraw={openWithdrawModal} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <svg
+                className="h-12 w-12 mx-auto mb-4 text-muted-foreground"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <p className="text-lg font-medium">No savings yet</p>
+              <p className="text-sm">Create your first savings goal to get started!</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

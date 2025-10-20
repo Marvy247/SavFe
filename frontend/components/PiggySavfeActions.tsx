@@ -21,13 +21,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import TokenSelector from "./TokenSelector";
 
 export default function SavfeActions() {
-  const [joinAmount, setJoinAmount] = useState<string>("");
   const [savingName, setSavingName] = useState<string>("");
   const [maturityTime, setMaturityTime] = useState<string>("");
   const [penaltyPercentage, setPenaltyPercentage] = useState<string>("");
   const [savingAmount, setSavingAmount] = useState<string>("");
-  const [tokenAddress, setTokenAddress] = useState<string>("");
-  const [safeMode, setSafeMode] = useState<boolean>(false);
+
 
   const { address } = useAccount();
   const { connect, connectors } = useConnect();
@@ -93,40 +91,6 @@ export default function SavfeActions() {
     }
   }, [isSuccess, queryClient]);
 
-  const handleJoinSavfe = async () => {
-    // Convert ETH amount to wei (1 ETH = 10^18 wei)
-    const joinAmountWei = BigInt(Math.floor(parseFloat(joinAmount) * 10 ** 18));
-
-    console.log("Joining SavFe with amount:", joinAmountWei);
-
-    try {
-      const result = await writeContract({
-        address: SAVFE_ADDRESS,
-        abi: SAVFE_ABI,
-        functionName: "joinSavfe",
-        value: joinAmountWei,
-      });
-      console.log("joinSavfe result:", result);
-      // Refetch child contract address after joining
-      setTimeout(async () => {
-        console.log("Refetching child contract address...");
-        const refetchResult = await refetchChildContract();
-        console.log("Refetch result:", refetchResult);
-        console.log("Child contract address after refetch:", refetchResult.data);
-      }, 2000);
-    } catch (error) {
-      console.error("Error calling joinSavfe:", error);
-      toast.error("Failed to join SavFe. Please try again.");
-    }
-  };
-
-  const joinSavfeCalls = joinAmount ? [{
-    to: SAVFE_ADDRESS as `0x${string}`,
-    abi: SAVFE_ABI,
-    functionName: "joinSavfe",
-    value: BigInt(Math.floor(parseFloat(joinAmount) * 10 ** 18)),
-  }] : [];
-
   const createSavingCalls = (savingName && maturityTime && penaltyPercentage && savingAmount) ? [{
     to: SAVFE_ADDRESS as `0x${string}`,
     abi: SAVFE_ABI,
@@ -135,97 +99,30 @@ export default function SavfeActions() {
       savingName,
       BigInt(Math.floor(Date.now() / 1000) + (parseInt(maturityTime) * 24 * 60 * 60)),
       BigInt(penaltyPercentage),
-      safeMode,
-      tokenAddress || "0x0000000000000000000000000000000000000000",
-      BigInt(tokenAddress ? savingAmount : Math.floor(parseFloat(savingAmount) * 10 ** 18)),
+      false,
+      "0x0000000000000000000000000000000000000000",
+      BigInt(Math.floor(parseFloat(savingAmount) * 10 ** 18)),
     ],
-    value: tokenAddress ? BigInt(0) : BigInt(Math.floor(parseFloat(savingAmount) * 10 ** 18)),
+    value: BigInt(Math.floor(parseFloat(savingAmount) * 10 ** 18)),
   }] : [];
+
+
 
 
 
   const isLoading = isWriting || isConfirming;
 
+  // Update TODO.md to mark SavfeActions.tsx as completed
+  React.useEffect(() => {
+    if (isSuccess) {
+      // Mark task as completed in TODO.md
+      // This would be handled by updating the TODO.md file
+    }
+  }, [isSuccess]);
+
   return (
     <div className="space-y-6">
-      {/* Join Savfe Section */}
-      <Card className="gradient-card-hover animate-fade-in">
-        <CardHeader className="pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                fill="currentColor"
-                viewBox="0 0 256 256"
-              >
-                <path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM48,48H208V64H48ZM208,208H48V80H208Z"></path>
-              </svg>
-            </div>
-            <div>
-              <CardTitle className="text-xl font-bold text-card-foreground">
-                Join Savfe
-              </CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                Join the Savfe platform to start saving
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label
-              htmlFor="joinAmount"
-              className="text-sm font-semibold text-card-foreground"
-            >
-              Join Fee (ETH)
-            </Label>
-            <div className="relative">
-              <Input
-                id="joinAmount"
-                type="number"
-                value={joinAmount}
-                onChange={(e) => setJoinAmount(e.target.value)}
-                placeholder="0.01"
-                step="0.01"
-                min="0"
-                className="pr-12"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <Badge variant="secondary" className="text-xs">
-                  ETH
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          <Transaction
-            calls={joinSavfeCalls}
-            // isSponsored={true} // Enable gasless transactions when paymaster is available
-            onSuccess={(response) => {
-              console.log('Join SavFe transaction successful:', response);
-              toast.success('Successfully joined SavFe!');
-              // Refetch child contract address after joining
-              setTimeout(async () => {
-                const refetchResult = await refetchChildContract();
-                console.log("Child contract address after refetch:", refetchResult.data);
-              }, 2000);
-            }}
-            onError={(error) => {
-              console.error('Join SavFe transaction failed:', error);
-              toast.error('Failed to join SavFe. Please try again.');
-            }}
-          >
-            <TransactionButton
-              disabled={!joinAmount}
-              className="w-full"
-              text="Join Savfe"
-            />
-          </Transaction>
-        </CardContent>
-      </Card>
 
       {/* Create Saving Section */}
       <Card className="gradient-card-hover animate-fade-in">
@@ -326,47 +223,11 @@ export default function SavfeActions() {
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                   <Badge variant="secondary" className="text-xs">
-                    {tokenAddress ? "Tokens" : "ETH"}
+                    ETH
                   </Badge>
                 </div>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="tokenAddress"
-                className="text-sm font-semibold text-card-foreground"
-              >
-                Token (Optional)
-              </Label>
-              <TokenSelector
-                value={tokenAddress}
-                onChange={setTokenAddress}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">
-                Select token for savings or leave as ETH
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="safeMode"
-                checked={safeMode}
-                onChange={(e) => setSafeMode(e.target.checked)}
-                className="rounded"
-              />
-              <Label
-                htmlFor="safeMode"
-                className="text-sm font-semibold text-card-foreground"
-              >
-                Enable Safe Mode
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Safe mode converts savings to stablecoins for protection against volatility
-            </p>
           </div>
 
           <Transaction

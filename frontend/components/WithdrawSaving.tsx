@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { SAVFE_ABI, SAVFE_ADDRESS } from "../lib/contract";
 import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -21,24 +22,21 @@ export default function WithdrawSaving() {
   const [selectedSaving, setSelectedSaving] = useState<SavingOption | null>(null);
   const queryClient = useQueryClient();
 
-  const {
-    writeContract,
-    data: txHash,
-    isPending: isWriting,
-    error,
-  } = useWriteContract();
+  const withdrawSavingCalls = (savingName) ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "withdrawSaving",
+    args: [savingName],
+  }] : [];
 
-  // Wait for transaction to be mined
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
+  const handleWithdrawSavingSuccess = (response: any) => {
+    console.log('Withdraw saving successful:', response);
+    toast.success('Saving withdrawn successfully!');
 
-  // Invalidate queries when transaction is successful
-  React.useEffect(() => {
-    if (isSuccess && selectedSaving) {
+    if (selectedSaving) {
       // Store withdrawal information for transaction history
       const withdrawalInfo = {
-        txHash,
+        txHash: response.transactionReceipts?.[0]?.transactionHash,
         savingName,
         amount: calculateNetAmount(),
         token: selectedSaving.token,
@@ -57,21 +55,19 @@ export default function WithdrawSaving() {
       queryClient.invalidateQueries({ queryKey: ["getSaving"] });
       queryClient.invalidateQueries({ queryKey: ["getUserChildContractAddressByAddress"] });
     }
-  }, [isSuccess, queryClient, selectedSaving, txHash, savingName]);
+  };
+
+  const handleWithdrawSavingError = (error: any) => {
+    console.error('Withdraw saving failed:', error);
+    toast.error('Failed to withdraw saving. Please try again.');
+  };
 
   const handleSavingChange = (name: string, saving?: SavingOption) => {
     setSavingName(name);
     setSelectedSaving(saving || null);
   };
 
-  const handleWithdrawSaving = async () => {
-    writeContract({
-      address: SAVFE_ADDRESS,
-      abi: SAVFE_ABI,
-      functionName: "withdrawSaving",
-      args: [savingName],
-    });
-  };
+
 
   const calculatePenalty = () => {
     if (!selectedSaving || selectedSaving.isMatured) return 0;
@@ -83,7 +79,7 @@ export default function WithdrawSaving() {
     return selectedSaving.amount - calculatePenalty();
   };
 
-  const isLoading = isWriting || isConfirming;
+  const isLoading = false; // Transaction component handles loading state
 
   return (
     <Card className="gradient-card-hover animate-fade-in">
@@ -212,94 +208,23 @@ export default function WithdrawSaving() {
           </div>
         </div>
 
-        <Button
-          onClick={handleWithdrawSaving}
-          disabled={!savingName || isLoading}
-          className="w-full"
-          size="lg"
+        <Transaction
+          calls={withdrawSavingCalls}
+          onSuccess={handleWithdrawSavingSuccess}
+          onError={handleWithdrawSavingError}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-              <span>
-                {isWriting ? "Confirm in Wallet..." : "Withdrawing Saving..."}
-              </span>
-            </div>
-          ) : selectedSaving && !selectedSaving.isMatured && selectedSaving.penaltyPercentage > 0 ? (
-            `Withdraw ${calculateNetAmount().toFixed(4)} ${selectedSaving.token} (with penalty)`
-          ) : (
-            "Withdraw Saving"
-          )}
-        </Button>
+          <TransactionButton
+            disabled={!savingName}
+            className="w-full"
+            text={selectedSaving && !selectedSaving.isMatured && selectedSaving.penaltyPercentage > 0 ?
+              `Withdraw ${calculateNetAmount().toFixed(4)} ${selectedSaving.token} (with penalty)` :
+              "Withdraw Saving"
+            }
+          />
+        </Transaction>
       </CardContent>
 
-      {/* Status Messages */}
-      {txHash && (
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground bg-muted p-3 rounded-lg mx-6 mb-4">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>Transaction: </span>
-          <a
-            href={`https://sepolia.basescan.org/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-mono"
-          >
-            {txHash.slice(0, 8)}...{txHash.slice(-6)}
-          </a>
-        </div>
-      )}
 
-      {isSuccess && (
-        <div className="flex items-center space-x-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200 mx-6 mb-4">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span>Saving withdrawn successfully!</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-start space-x-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20 mx-6 mb-4">
-          <svg
-            className="h-4 w-4 mt-0.5 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="break-all">
-            Error: {error.message.split("\n")[0]}
-          </span>
-        </div>
-      )}
     </Card>
   );
 }

@@ -332,7 +332,7 @@ export default function SavingsOverview() {
               {stats.emergencyFundStatus === 'excellent' && 'Well protected! 🎉'}
               {stats.emergencyFundStatus === 'adequate' && 'Good coverage 👍'}
               {stats.emergencyFundStatus === 'building' && 'Keep saving! 💪'}
-              {stats.emergencyFundStatus === 'none' && 'Start building today 🚀'}
+              {stats.emergencyFundStatus === 'none' && 'Start building today'}
             </p>
           </div>
         </CardContent>

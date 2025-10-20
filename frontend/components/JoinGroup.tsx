@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { FACTORY_ABI, FACTORY_ADDRESS } from "../lib/contract";
+import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -16,21 +17,24 @@ import { Label } from "@/components/ui/label";
 export default function JoinGroup({ disabled }: { disabled?: boolean }) {
   const [groupId, setGroupId] = useState<string>("");
 
-  const { data: hash, writeContract } = useWriteContract();
-  const { isLoading, isSuccess, isError } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const joinGroupCalls = groupId ? [{
+    to: FACTORY_ADDRESS as `0x${string}`,
+    abi: FACTORY_ABI,
+    functionName: "joinGroup",
+    args: [BigInt(groupId)],
+  }] : [];
 
-  const handleJoin = () => {
-    if (!groupId) return;
-
-    writeContract({
-      address: FACTORY_ADDRESS as `0x${string}`,
-      abi: FACTORY_ABI,
-      functionName: "joinGroup",
-      args: [BigInt(groupId)],
-    });
+  const handleJoinGroupSuccess = (response: any) => {
+    console.log('Join group successful:', response);
+    toast.success('Successfully joined group!');
   };
+
+  const handleJoinGroupError = (error: any) => {
+    console.error('Join group failed:', error);
+    toast.error('Failed to join group. Please try again.');
+  };
+
+
 
   return (
     <Card className="gradient-card-hover animate-fade-in">
@@ -82,60 +86,19 @@ export default function JoinGroup({ disabled }: { disabled?: boolean }) {
           />
         </div>
 
-        <Button
-          onClick={handleJoin}
-          disabled={isLoading || !groupId}
-          className="w-full"
-          size="lg"
+        <Transaction
+          calls={joinGroupCalls}
+          onSuccess={handleJoinGroupSuccess}
+          onError={handleJoinGroupError}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-              <span>Joining Group...</span>
-            </div>
-          ) : (
-            "Join Group"
-          )}
-        </Button>
+          <TransactionButton
+            disabled={!groupId}
+            className="w-full"
+            text="Join Group"
+          />
+        </Transaction>
 
-        {/* Status Messages */}
-        {isSuccess && (
-          <div className="flex items-center space-x-2 text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>Successfully joined group!</span>
-          </div>
-        )}
 
-        {isError && (
-          <div className="flex items-start space-x-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20">
-            <svg
-              className="h-4 w-4 mt-0.5 flex-shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>Error joining group</span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

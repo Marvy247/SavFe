@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
+import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
+import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -83,79 +85,55 @@ export default function AdminPanel() {
     }
   }, [joinLimitFee, savingFee]);
 
-  // Withdraw earnings functionality
-  const { writeContract: writeWithdraw, data: txHashWithdraw, isPending: isPendingWithdraw } = useWriteContract();
-  const {
-    isLoading: isConfirmingWithdraw,
-    isSuccess: isSuccessWithdraw,
-    isError: isErrorWithdraw,
-  } = useWaitForTransactionReceipt({
-    hash: txHashWithdraw,
-  });
+  const dripFountainCalls = [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "dripFountain",
+  }];
 
-  const handleWithdrawEarnings = async () => {
-    try {
-      writeWithdraw({
-        address: SAVFE_ADDRESS,
-        abi: SAVFE_ABI,
-        functionName: "dripFountain",
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  const handleDripFountainSuccess = (response: any) => {
+    console.log('Drip fountain successful:', response);
+    toast.success('Platform earnings withdrawn successfully!');
   };
 
-  // Update join limit fee
-  const { writeContract: writeJoinLimitFee, data: txHashJoinLimitFee, isPending: isPendingJoinLimitFee } = useWriteContract();
-  const {
-    isLoading: isConfirmingJoinLimitFee,
-    isSuccess: isSuccessJoinLimitFee,
-    isError: isErrorJoinLimitFee,
-  } = useWaitForTransactionReceipt({
-    hash: txHashJoinLimitFee,
-  });
-
-  const handleUpdateJoinLimitFee = async () => {
-    try {
-      const parsedValue = parseEther(joinLimitFeeInput);
-      writeJoinLimitFee({
-        address: SAVFE_ADDRESS,
-        abi: SAVFE_ABI,
-        functionName: "setJoinLimitFee",
-        args: [parsedValue],
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  const handleDripFountainError = (error: any) => {
+    console.error('Drip fountain failed:', error);
+    toast.error('Failed to withdraw platform earnings. Please try again.');
   };
 
-  // Update saving fee
-  const { writeContract: writeSavingFee, data: txHashSavingFee, isPending: isPendingSavingFee } = useWriteContract();
-  const {
-    isLoading: isConfirmingSavingFee,
-    isSuccess: isSuccessSavingFee,
-    isError: isErrorSavingFee,
-  } = useWaitForTransactionReceipt({
-    hash: txHashSavingFee,
-  });
+  const setJoinLimitFeeCalls = joinLimitFeeInput ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "setJoinLimitFee",
+    args: [parseEther(joinLimitFeeInput)],
+  }] : [];
 
-  const handleUpdateSavingFee = async () => {
-    try {
-      const parsedValue = parseEther(savingFeeInput);
-      writeSavingFee({
-        address: SAVFE_ADDRESS,
-        abi: SAVFE_ABI,
-        functionName: "setSavingFee",
-        args: [parsedValue],
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  const handleSetJoinLimitFeeSuccess = (response: any) => {
+    console.log('Set join limit fee successful:', response);
+    toast.success('Join limit fee updated successfully!');
   };
 
-  const isLoadingWithdraw = isPendingWithdraw || isConfirmingWithdraw;
-  const isLoadingJoinLimitFee = isPendingJoinLimitFee || isConfirmingJoinLimitFee;
-  const isLoadingSavingFee = isPendingSavingFee || isConfirmingSavingFee;
+  const handleSetJoinLimitFeeError = (error: any) => {
+    console.error('Set join limit fee failed:', error);
+    toast.error('Failed to update join limit fee. Please try again.');
+  };
+
+  const setSavingFeeCalls = savingFeeInput ? [{
+    to: SAVFE_ADDRESS as `0x${string}`,
+    abi: SAVFE_ABI,
+    functionName: "setSavingFee",
+    args: [parseEther(savingFeeInput)],
+  }] : [];
+
+  const handleSetSavingFeeSuccess = (response: any) => {
+    console.log('Set saving fee successful:', response);
+    toast.success('Saving fee updated successfully!');
+  };
+
+  const handleSetSavingFeeError = (error: any) => {
+    console.error('Set saving fee failed:', error);
+    toast.error('Failed to update saving fee. Please try again.');
+  };
 
   if (!isOwner) {
     return (
@@ -300,50 +278,20 @@ export default function AdminPanel() {
                   Transfer accumulated platform earnings to the admin wallet
                 </p>
               </div>
-              <Button
-                onClick={handleWithdrawEarnings}
-                disabled={isLoadingWithdraw || !fountainAmount || (fountainAmount && typeof fountainAmount === "bigint" && fountainAmount === BigInt(0))}
-                className="w-full sm:w-auto"
+              <Transaction
+                calls={dripFountainCalls}
+                onSuccess={handleDripFountainSuccess}
+                onError={handleDripFountainError}
               >
-                {isLoadingWithdraw ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>
-                      {isPendingWithdraw ? "Confirm in Wallet..." : "Withdrawing..."}
-                    </span>
-                  </div>
-                ) : (
-                  `Withdraw ${fountainAmount && typeof fountainAmount === "bigint" ? formatEther(fountainAmount) : "0"} ETH`
-                )}
-              </Button>
+                <TransactionButton
+                  disabled={!fountainAmount || (fountainAmount && typeof fountainAmount === "bigint" && fountainAmount === BigInt(0))}
+                  className="w-full sm:w-auto"
+                  text={`Withdraw ${fountainAmount && typeof fountainAmount === "bigint" ? formatEther(fountainAmount) : "0"} ETH`}
+                />
+              </Transaction>
             </div>
 
-            {/* Status Messages */}
-            {isSuccessWithdraw && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-green-800 dark:text-green-200 font-medium">
-                    Earnings withdrawn successfully!
-                  </span>
-                </div>
-              </div>
-            )}
 
-            {isErrorWithdraw && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <span className="text-red-800 dark:text-red-200 font-medium">
-                    Failed to withdraw earnings. Please try again.
-                  </span>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -375,19 +323,17 @@ export default function AdminPanel() {
                     onChange={(e) => setJoinLimitFeeInput(e.target.value)}
                     placeholder="Enter join limit fee in ETH"
                   />
-                  <Button
-                    onClick={handleUpdateJoinLimitFee}
-                    disabled={isLoadingJoinLimitFee}
-                    className="mt-2"
+                  <Transaction
+                    calls={setJoinLimitFeeCalls}
+                    onSuccess={handleSetJoinLimitFeeSuccess}
+                    onError={handleSetJoinLimitFeeError}
                   >
-                    {isLoadingJoinLimitFee ? 'Updating...' : 'Update Join Limit Fee'}
-                  </Button>
-                  {isSuccessJoinLimitFee && (
-                    <p className="text-green-600 mt-1">Join limit fee updated successfully.</p>
-                  )}
-                  {isErrorJoinLimitFee && (
-                    <p className="text-red-600 mt-1">Failed to update join limit fee.</p>
-                  )}
+                    <TransactionButton
+                      disabled={!joinLimitFeeInput}
+                      className="mt-2"
+                      text="Update Join Limit Fee"
+                    />
+                  </Transaction>
                 </div>
                 <div>
                   <Label htmlFor="savingFee" className="text-sm font-medium text-muted-foreground">Saving Fee</Label>
@@ -398,19 +344,17 @@ export default function AdminPanel() {
                     onChange={(e) => setSavingFeeInput(e.target.value)}
                     placeholder="Enter saving fee in ETH"
                   />
-                  <Button
-                    onClick={handleUpdateSavingFee}
-                    disabled={isLoadingSavingFee}
-                    className="mt-2"
+                  <Transaction
+                    calls={setSavingFeeCalls}
+                    onSuccess={handleSetSavingFeeSuccess}
+                    onError={handleSetSavingFeeError}
                   >
-                    {isLoadingSavingFee ? 'Updating...' : 'Update Saving Fee'}
-                  </Button>
-                  {isSuccessSavingFee && (
-                    <p className="text-green-600 mt-1">Saving fee updated successfully.</p>
-                  )}
-                  {isErrorSavingFee && (
-                    <p className="text-red-600 mt-1">Failed to update saving fee.</p>
-                  )}
+                    <TransactionButton
+                      disabled={!savingFeeInput}
+                      className="mt-2"
+                      text="Update Saving Fee"
+                    />
+                  </Transaction>
                 </div>
               </div>
               <div className="space-y-4">
