@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { Banknote, Calendar, TrendingUp, Shield } from 'lucide-react';
 
 export default function SavingsOverview() {
   const { address } = useAccount();
@@ -163,16 +164,7 @@ export default function SavingsOverview() {
         <CardHeader className="pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                fill="currentColor"
-                viewBox="0 0 256 256"
-              >
-                <path d="M152,144a40,40,0,1,1-40-40A40,40,0,0,1,152,144ZM128,104a24,24,0,1,0,24,24A24,24,0,0,0,128,104Z" opacity="0.2"></path>
-                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v40h48A8,8,0,0,1,192,128Z"></path>
-              </svg>
+              <Banknote className="h-6 w-6 text-primary" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-card-foreground">
@@ -215,15 +207,7 @@ export default function SavingsOverview() {
         <CardHeader className="pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                fill="currentColor"
-                viewBox="0 0 256 256"
-              >
-                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v40h48A8,8,0,0,1,192,128Z"></path>
-              </svg>
+              <Calendar className="h-6 w-6 text-primary" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-card-foreground">
@@ -261,16 +245,7 @@ export default function SavingsOverview() {
         <CardHeader className="pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                fill="currentColor"
-                viewBox="0 0 256 256"
-              >
-                <path d="M152,144a40,40,0,1,1-40-40A40,40,0,0,1,152,144ZM128,104a24,24,0,1,0,24,24A24,24,0,0,0,128,104Z" opacity="0.2"></path>
-                <path d="M200,80a8,8,0,0,1-8,8h-8v16a8,8,0,0,1-16,0V88h-8a8,8,0,0,1,0-16h32A8,8,0,0,1,200,80Zm-8,32a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h32A8,8,0,0,1,192,112Zm24-64H152a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16ZM96,208a8,8,0,0,1-8,8H56a16,16,0,0,1-16-16V80a8,8,0,0,1,16,0v96a0,0,0,0,1,0,0H88A8,8,0,0,1,96,208Zm104-40H152a8,8,0,0,1,0-16h48a0,0,0,0,1,0,0V80a8,8,0,0,1,16,0v88A16,16,0,0,1,200,184Z"></path>
-              </svg>
+              <TrendingUp className="h-6 w-6 text-primary" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-card-foreground">
@@ -306,7 +281,7 @@ export default function SavingsOverview() {
         <CardHeader className="pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span className="text-2xl">{getEmergencyFundIcon(stats.emergencyFundStatus)}</span>
+              <Shield className="h-6 w-6 text-primary" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-card-foreground">

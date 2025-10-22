@@ -41,7 +41,7 @@ contract SavfeTest is Test, SavfeSetup {
         savfe = new Savfe(address(stableCoin));
         vm.deal(userWJoined, 2 ether);
         vm.startPrank(userWJoined);
-        savfe.joinSavfe{value: joinFee}();
+        savfe.joinSavfe();
         ChildSavfe childContract = getChildContract();
         uint initialBalance = address(childContract).balance;
         closeTime = block.timestamp + extraTimeDuration;

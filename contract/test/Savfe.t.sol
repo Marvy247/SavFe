@@ -29,7 +29,7 @@ contract SavfeTest is Test, SavfeConfigs {
         uint256 initialUserCount = savfe.userCount();
 
         vm.prank(user1);
-        address childContractAddress = savfe.joinSavfe{value: savfe.JoinLimitFee()}();
+        address childContractAddress = savfe.joinSavfe();
 
         // Assertions
         assertEq(savfe.userCount(), initialUserCount + 1, "User count should increase by 1");
@@ -40,17 +40,18 @@ contract SavfeTest is Test, SavfeConfigs {
 
     function test_JoinSavfeReturnsExistingAddressIfAlreadyJoined() public {
         vm.prank(user1);
-        address firstJoinAddress = savfe.joinSavfe{value: savfe.JoinLimitFee()}(); // First join
+        address firstJoinAddress = savfe.joinSavfe(); // First join
 
         vm.prank(user1);
-        address secondJoinAddress = savfe.joinSavfe{value: savfe.JoinLimitFee()}(); // Second join
+        address secondJoinAddress = savfe.joinSavfe(); // Second join
 
         assertEq(firstJoinAddress, secondJoinAddress, "Should return the same address if already joined");
     }
 
-    function test_JoinSavfeRevertIfLowFee() public {
+    function test_JoinSavfeNoFeeRequired() public {
         vm.prank(user1);
-        vm.expectRevert(SavfeHelperLib.AmountNotEnough.selector);
-        savfe.joinSavfe{value: 1}(); // Join with 1 wei
+        address childContractAddress = savfe.joinSavfe(); // Join without fee
+
+        assertNotEq(childContractAddress, address(0), "Child contract should be created without fee");
     }
 }

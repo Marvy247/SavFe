@@ -168,16 +168,6 @@ export const WalletCardCompact = () => {
           <WalletDropdownDisconnect />
         </WalletDropdown>
       </Wallet>
-
-      {/* Fund Button */}
-      <FundButton
-        fiatCurrency="USD"
-        openIn="popup"
-        popupSize="md"
-        className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-1 rounded text-sm font-medium transition-colors cursor-pointer"
-      >
-        Fund
-      </FundButton>
     </>
   );
 };

@@ -221,6 +221,9 @@ export default function SavingsDashboard() {
     queryClient.invalidateQueries({ queryKey: ['getSaving'] });
     queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddress'] });
     queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddressByAddress'] });
+    // Refetch the savings names and child contract data
+    refetchSavingsNames();
+    refetchChildContract();
   };
 
   const openWithdrawModal = (savingName: string) => {
@@ -236,6 +239,9 @@ export default function SavingsDashboard() {
     queryClient.invalidateQueries({ queryKey: ['getSaving'] });
     queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddress'] });
     queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddressByAddress'] });
+    // Refetch the savings names and child contract data
+    refetchSavingsNames();
+    refetchChildContract();
   };
 
   const { data: childContractAddress, refetch: refetchChildContract } = useReadContract({

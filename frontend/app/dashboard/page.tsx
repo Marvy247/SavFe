@@ -28,6 +28,7 @@ const Identity = dynamic(() => import('@coinbase/onchainkit/identity').then(mod 
 const Avatar = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Avatar), { ssr: false });
 const Name = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Name), { ssr: false });
 import { Swap } from '@coinbase/onchainkit/swap';
+import { FundButton } from '@coinbase/onchainkit/fund';
 // import { Notification } from '@coinbase/onchainkit/notification'; // Not available yet
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -47,7 +48,7 @@ import { Target, User, Users, Brain, Award } from "lucide-react";
 import Link from "next/link";
 
 import { useAccount, useReadContract } from "wagmi";
-import { FACTORY_ABI, SAVFE_ADDRESS, readGroupData } from "@/lib/contract";
+import { FACTORY_ABI, SAVFE_ADDRESS, SAVFE_ABI, readGroupData } from "@/lib/contract";
 import { formatEther } from "viem";
 
 interface GroupData {
@@ -68,8 +69,8 @@ export default function DashboardPage() {
   const { data: childContractAddress, refetch: refetchChildContract } = useReadContract({
     address: SAVFE_ADDRESS,
     abi: FACTORY_ABI,
-    functionName: 'getUserChildContractAddress',
-    args: [address],
+    functionName: 'getUserChildContractAddressByAddress',
+    args: address ? [address] : [],
     query: {
       enabled: !!address,
     }
@@ -87,16 +88,10 @@ export default function DashboardPage() {
 
   const tabs = [
     {
-      id: "individual",
-      label: "Individual Savings",
-      description: "Create and manage your personal savings goals",
-      icon: <User className="h-5 w-5" />
-    },
-    {
-      id: "group",
-      label: "Group Savings",
-      description: "Join rotating savings groups and collaborate with others",
-      icon: <Users className="h-5 w-5" />
+      id: "savings",
+      label: "Savings",
+      description: "Manage your individual and group savings goals",
+      icon: <Target className="h-5 w-5" />
     },
     {
       id: "challenges",
@@ -105,13 +100,21 @@ export default function DashboardPage() {
       icon: <Target className="h-5 w-5" />
     },
     {
-      id: "ai-suggestions",
-      label: "AI Suggestions",
+      id: "ai",
+      label: "AI",
       description: "Get personalized savings recommendations powered by AI",
       icon: <Brain className="h-5 w-5" />
     },
     {
-      id: "badges",
+      id: "fund",
+      label: "Fund & Swap",
+      description: "Add funds to your wallet and swap tokens",
+      icon: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+      </svg>
+    },
+    {
+      id: "achievements",
       label: "Achievements",
       description: "View your earned badges and achievements",
       icon: <Award className="h-5 w-5" />
@@ -127,7 +130,7 @@ export default function DashboardPage() {
           // Use wagmi to call joinSavfe
           await writeContract(config, {
             address: SAVFE_ADDRESS,
-            abi: FACTORY_ABI,
+            abi: SAVFE_ABI,
             functionName: 'joinSavfe',
             args: [],
           });
@@ -197,26 +200,47 @@ export default function DashboardPage() {
                 <SavingsChallenges />
               )}
 
-              {activeTab === "ai-suggestions" && (
+              {activeTab === "ai" && (
                 <AISavingsSuggestions />
               )}
 
-              {activeTab === "badges" && (
-                <NFTGallery />
-              )}
-
-              {activeTab === "group" && (
+              {activeTab === "fund" && (
                 <div className="space-y-8">
-                  <MyGroups />
-                  <GroupCards />
-                  <GroupsTable />
+                  <Card>
+                    <CardHeader>
+                        <CardTitle>Fund Your Wallet</CardTitle>
+                        <CardDescription>
+                            Add funds to your wallet to start saving. You can use a credit card or transfer from another wallet.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-center p-4">
+                        <FundButton fiatCurrency="USD" openIn="popup" popupSize="md" />
+                    </CardContent>
+                  </Card>
+                  <Card className="gradient-card-hover">
+                    <CardHeader>
+                      <CardTitle>Token Swap</CardTitle>
+                      <CardDescription>Exchange tokens before depositing</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Swap />
+                    </CardContent>
+                  </Card>
+                  <WithdrawEarnings />
                 </div>
               )}
 
-              {activeTab === "individual" && (
+              {activeTab === "achievements" && (
+                <NFTGallery />
+              )}
+
+              {activeTab === "savings" && (
                 <div className="space-y-8">
                   <SavingsOverview />
                   <SavingsVisualization />
+                  <MyGroups />
+                  <GroupCards />
+                  <GroupsTable />
                 </div>
               )}
             </div>
@@ -226,33 +250,13 @@ export default function DashboardPage() {
                 <SavingsDashboard />
               </div>
               <Card id="savfe-actions" className="gradient-card-hover">
-                <CardHeader>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg font-bold">Savings Actions</CardTitle>
-                      <CardDescription>Create and manage your personal savings goals</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
+
                 <CardContent>
                   <PiggySavfeActions />
                 </CardContent>
               </Card>
               <CreateGroup />
-              <Card className="gradient-card-hover">
-                <CardHeader>
-                  <CardTitle>Token Swap</CardTitle>
-                  <CardDescription>Exchange tokens before depositing</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Swap />
-                </CardContent>
-              </Card>
+
               <div id="emergency-withdraw">
                 <EmergencyWithdraw />
               </div>

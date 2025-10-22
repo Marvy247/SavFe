@@ -28,12 +28,12 @@ contract SavfeTest is Test, SavfeConfigs {
         assertEq(savfe.owner(), address(this));
     }
 
-    function test_RevertIf_JoinWithLowFee() public {
-       vm.expectPartialRevert(SavfeHelperLib.AmountNotEnough.selector);
+    function test_JoinWithoutFee() public {
        address newUser = address(1);
        vm.deal(newUser, 1 ether);
        vm.prank(newUser);
-       savfe.joinSavfe{value: 0.000000001 ether}();
+       address childContract = savfe.joinSavfe();
+       assertNotEq(childContract, address(0), "Child contract should be created without fee");
     }
 
 }

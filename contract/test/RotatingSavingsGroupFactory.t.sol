@@ -42,7 +42,7 @@ contract RotatingSavingsGroupFactoryTest is Test {
 
         // deploy factory
         vm.prank(userCreator);
-        factory = new RotatingSavingsGroupFactory();
+        factory = new RotatingSavingsGroupFactory(address(0)); // dummy address for test
     }
 
     function test_CreateGroup_and_capture_members_array() public {

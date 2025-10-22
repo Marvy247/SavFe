@@ -54,10 +54,8 @@ export default function WithdrawSavingModal({
     queryClient.invalidateQueries({ queryKey: ['JoinLimitFee'] });
     queryClient.invalidateQueries({ queryKey: ['SavingFee'] });
     queryClient.invalidateQueries({ queryKey: ['fountain'] });
-    // Close modal after a short delay to show success message
-    setTimeout(() => {
-      handleClose();
-    }, 2000);
+    // Close modal immediately and let parent component handle refetching
+    handleClose();
   };
 
   const handleWithdrawSavingError = (error: any) => {

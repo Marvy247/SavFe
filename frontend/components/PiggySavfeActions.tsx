@@ -235,6 +235,16 @@ export default function SavfeActions() {
             onSuccess={(response) => {
               console.log('Create Saving transaction successful:', response);
               toast.success('Saving created successfully!');
+              // Reset form fields
+              setSavingName('');
+              setMaturityTime('');
+              setPenaltyPercentage('');
+              setSavingAmount('');
+              // Invalidate queries to refresh data
+              queryClient.invalidateQueries({ queryKey: ['getSavingsNames'] });
+              queryClient.invalidateQueries({ queryKey: ['getSaving'] });
+              queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddress'] });
+              queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddressByAddress'] });
             }}
             onError={(error) => {
               console.error('Create Saving transaction failed:', error);

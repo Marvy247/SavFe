@@ -24,6 +24,12 @@ library SavfeHelperLib {
     error InvalidIncrementValue();
     error FundsTransferFailed();
     error TokenWithdrawalFailed();
+    // Enhanced UX errors
+    error InsufficientBalance(string details);
+    error InvalidAddress(string context);
+    error OperationNotAllowed(string reason);
+    error ParameterOutOfRange(string param, string range);
+    error ContractPaused(string message);
 
     // Events
     event JoinedSavfe(address indexed userAddress);

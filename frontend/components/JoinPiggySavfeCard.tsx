@@ -47,9 +47,12 @@ export default function JoinSavfeCard() {
           calls={joinSavfeCalls}
           onSuccess={(response) => {
             toast.success('Successfully joined SavFe!');
-            setTimeout(() => {
-              queryClient.invalidateQueries();
-            }, 2000);
+            // Invalidate queries immediately to refresh data
+            queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddress'] });
+            queryClient.invalidateQueries({ queryKey: ['getUserChildContractAddressByAddress'] });
+            queryClient.invalidateQueries({ queryKey: ['userCount'] });
+            // Refetch child contract specifically
+            refetchChildContract();
           }}
           onError={(error) => {
             toast.error('Failed to join SavFe. Please try again.');

@@ -37,6 +37,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
+import DynamicNft from './DynamicNft';
+
 // Achievement types and definitions
 export interface Achievement {
   id: string;
@@ -367,34 +369,33 @@ export default function AchievementsSystem() {
         </div>
       </div>
 
-      {/* Progress Overview */}
-      <Card className="gradient-card-hover">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">{stats.unlocked}</div>
-              <div className="text-sm text-muted-foreground">Unlocked</div>
-              <div className="text-xs text-muted-foreground">of {stats.total} achievements</div>
+      {/* Dynamic NFT and Stats */}
+      <Card>
+        <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          <div className="md:col-span-1 flex items-center justify-center">
+            <DynamicNft level={stats.currentLevel} points={stats.totalPoints} />
+          </div>
+          <div className="md:col-span-2 space-y-4">
+            <div>
+              <h3 className="text-2xl font-bold text-primary">Your Savings Passport</h3>
+              <p className="text-muted-foreground">This NFT evolves as you save and complete achievements.</p>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">{stats.completionRate}%</div>
-              <div className="text-sm text-muted-foreground">Complete</div>
-              <Progress value={stats.completionRate} className="w-full h-2 mt-2" />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Level</div>
+                    <div className="text-3xl font-bold text-primary">{stats.currentLevel}</div>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Total Points</div>
+                    <div className="text-3xl font-bold text-primary">{stats.totalPoints}</div>
+                </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">{userProgress.streakDays}</div>
-              <div className="text-sm text-muted-foreground">Day Streak</div>
-              <div className="flex items-center justify-center gap-1 mt-1">
-                <Flame className="h-4 w-4 text-orange-500" />
-                <span className="text-xs text-muted-foreground">Keep it up!</span>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">
-                {ACHIEVEMENTS.filter(a => a.rarity === 'legendary' && userProgress.unlockedAchievements.includes(a.id)).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Legendary</div>
-              <div className="text-xs text-muted-foreground">Achievements</div>
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium">Progress to Next Level</span>
+                    <span className="text-sm text-muted-foreground">{stats.pointsToNextLevel} points to go</span>
+                </div>
+                <Progress value={(stats.totalPoints % (stats.currentLevel * 500)) / (stats.currentLevel * 5)} className="w-full h-3" />
             </div>
           </div>
         </CardContent>

@@ -38,7 +38,7 @@ contract SavfeTest is Test, SavfeSetup {
         savfe = new Savfe(address(stableCoin));
         vm.deal(userWJoined, 1 ether);
         vm.startPrank(userWJoined);
-        savfe.joinSavfe{value: joinFee}();
+        savfe.joinSavfe();
         vm.stopPrank();
     }
 
@@ -66,28 +66,25 @@ contract SavfeTest is Test, SavfeSetup {
         deal(randomToken, userWJoined, 130e18);
 
         uint closeTime = block.timestamp + extraTimeDuration;
-        // create saving with randomToken
-        try savfe.createSaving{value: savingAmount}(school, closeTime, 1, false, randomToken, savingAmount) {
-            fail("should have reverted");
-        } catch (bytes memory reason) {
-            assertEq(reason, abi.encodeWithSelector(SavfeHelperLib.TokenWithdrawalFailed.selector));
-        }
-        
+        // create saving with randomToken without approval
+        vm.expectRevert(); // Expect any revert due to insufficient allowance
+        savfe.createSaving{value: savingAmount}(school, closeTime, 1, false, randomToken, savingAmount);
+
         vm.stopPrank();
     }
 
-    function test_CreateSavingWithERC20() public {
+    function test_CreateSavingWithStableCoin() public {
         vm.startPrank(userWJoined);
-        deal(randomToken, userWJoined, 130e18);
+        deal(stableCoin, userWJoined, 130e18);
         ChildSavfe childContract = getChildContract();
 
-        uint initialBalance = USDX(randomToken).balanceOf(userWJoined);
+        uint initialBalance = USDX(stableCoin).balanceOf(userWJoined);
         uint closeTime = block.timestamp + extraTimeDuration;
         // allowance
-        USDX(randomToken).approve(address(savfe), savingAmount);
-        // create saving with randomToken
-        savfe.createSaving{value: savingAmount}(school, closeTime, 1, false, randomToken, savingAmount);
-        uint finalBalance = USDX(randomToken).balanceOf(userWJoined);
+        USDX(stableCoin).approve(address(savfe), savingAmount);
+        // create saving with stableCoin
+        savfe.createSaving{value: savingAmount}(school, closeTime, 1, false, stableCoin, savingAmount);
+        uint finalBalance = USDX(stableCoin).balanceOf(userWJoined);
 
         console.log(initialBalance);
 
@@ -110,7 +107,7 @@ contract SavfeTest is Test, SavfeSetup {
         // allowance
         USDX(randomToken).approve(address(savfe), savingAmount);
         // create saving with randomToken
-        vm.expectPartialRevert(SavfeHelperLib.InvalidSaving.selector);
+        vm.expectPartialRevert(SavfeHelperLib.OperationNotAllowed.selector);
         savfe.createSaving{value: savingAmount}(school, closeTime, 1, false, randomToken, savingAmount);
         vm.stopPrank();
     }

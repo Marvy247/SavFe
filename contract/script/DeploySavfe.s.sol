@@ -11,10 +11,10 @@ contract DeploySavfeScript is Script {
     function run() public returns (Savfe, RotatingSavingsGroupFactory) {
         vm.startBroadcast();
 
-        address stableCoinAddress = 0x0E82fDDAd51cc3ac12b69761C45bBCB9A2Bf3C83; // Lisk sepolia USDC address on L2
+        address stableCoinAddress = 0x036cbD53842C5426634e7929541Ec231bcE1BdAE; // Base Sepolia USDC address
 
         Savfe savfe = new Savfe(stableCoinAddress);
-        RotatingSavingsGroupFactory rotatingSavingsGroupFactory = new RotatingSavingsGroupFactory();
+        RotatingSavingsGroupFactory rotatingSavingsGroupFactory = new RotatingSavingsGroupFactory(address(savfe));
 
         vm.stopBroadcast();
 

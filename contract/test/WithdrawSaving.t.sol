@@ -41,7 +41,7 @@ contract SavfeTest is Test, SavfeSetup {
         savfe = new Savfe(address(stableCoin));
         vm.deal(userWJoined, 1 ether);
         vm.startPrank(userWJoined);
-        savfe.joinSavfe{value: joinFee}();
+        savfe.joinSavfe();
         ChildSavfe childContract = getChildContract();
         uint initialBalance = address(childContract).balance;
         closeTime = block.timestamp + extraTimeDuration;
@@ -104,15 +104,15 @@ contract SavfeTest is Test, SavfeSetup {
     }
 
         function saveERC20(string memory savingName) internal {
-        deal(randomToken, userWJoined, 130e18);
+        deal(stableCoin, userWJoined, 130e18);
 
-        uint initialBalance = USDX(randomToken).balanceOf(userWJoined);
+        uint initialBalance = USDX(stableCoin).balanceOf(userWJoined);
         closeTime = block.timestamp + extraTimeDuration;
         // allowance
-        USDX(randomToken).approve(address(savfe), savingAmount);
-        // create saving with randomToken
-        savfe.createSaving{value: savingAmount}(savingName, closeTime, 1, false, randomToken, savingAmount);
-        uint finalBalance = USDX(randomToken).balanceOf(userWJoined);
+        USDX(stableCoin).approve(address(savfe), savingAmount);
+        // create saving with stableCoin
+        savfe.createSaving{value: savingAmount}(savingName, closeTime, 1, false, stableCoin, savingAmount);
+        uint finalBalance = USDX(stableCoin).balanceOf(userWJoined);
         savedAmount = initialBalance - finalBalance;
     }
 
@@ -122,11 +122,11 @@ contract SavfeTest is Test, SavfeSetup {
         saveERC20(erc20House);
 
         //  withdraw
-        uint initialBalance = USDX(randomToken).balanceOf(userWJoined);
+        uint initialBalance = USDX(stableCoin).balanceOf(userWJoined);
 
         vm.warp(closeTime);
         savfe.withdrawSaving(erc20House);
-        uint finalBalance = USDX(randomToken).balanceOf(userWJoined);
+        uint finalBalance = USDX(stableCoin).balanceOf(userWJoined);
 
         uint256 principal = savingAmount; // For ERC20, principal is just savingAmount
         // uint256 expectedInterest = principal / 1000; // Based on temporary interest calculation

@@ -17,17 +17,24 @@ contract Savfe {
     mapping(address => address) addressToUserBS;
     uint256 public userCount;
 
+
+
     // *** savings values ***
     // editing value from 0.0001 to 1wei
-    uint256 public JoinLimitFee = 0.01 ether;
+    uint256 public JoinLimitFee = 0 ether;
     uint256 public SavingFee = 0.0001 ether;
     uint256 public ChildContractGasFee = SavingFee / 20;
+
+    // *** User analytics ***
+    mapping(address => uint256) public userGroupJoins;
 
     constructor(address _stableCoin) payable {
         stableCoin = IERC20(_stableCoin);
         _owner = msg.sender;
         userCount = 0;
         fountain = msg.value;
+
+
     }
 
     modifier inhouseOnly() {
@@ -56,14 +63,11 @@ contract Savfe {
         _;
     }
 
-    function joinSavfe() public payable returns (address) {
+    function joinSavfe() public returns (address) {
         address ownerAddress = msg.sender;
         address currAddr = addressToUserBS[ownerAddress];
         if (currAddr != address(0)) {
             return currAddr;
-        }
-        if (msg.value < JoinLimitFee) {
-            revert SavfeHelperLib.AmountNotEnough();
         }
         // deploy child contract for user
         address userBSAddress = address(new ChildSavfe(msg.sender, address(stableCoin)));
@@ -118,6 +122,32 @@ contract Savfe {
         }
     }
 
+    /// @notice Set child contract gas fee
+    function setChildContractGasFee(uint256 _fee) external inhouseOnly {
+        ChildContractGasFee = _fee;
+    }
+
+    /// @notice Set join limit fee
+    function setJoinLimitFee(uint256 _fee) external inhouseOnly {
+        JoinLimitFee = _fee;
+    }
+
+    /// @notice Set saving fee
+    function setSavingFee(uint256 _fee) external inhouseOnly {
+        SavingFee = _fee;
+        ChildContractGasFee = _fee / 20;
+    }
+
+    /// @notice Withdraw fees to specified address
+    function withdrawFee(address payable _to) external inhouseOnly {
+        require(address(this).balance >= fountain, "Insufficient balance above fountain");
+        uint256 withdrawableAmount = address(this).balance - fountain;
+        require(withdrawableAmount > 0, "No fees to withdraw");
+
+        (bool success,) = _to.call{value: withdrawableAmount}("");
+        require(success, "Fee withdrawal failed");
+    }
+
     function dripFountain() public inhouseOnly {
         // send balance - fountain to masterAddress
         uint256 balance = address(this).balance;
@@ -134,6 +164,24 @@ contract Savfe {
     function owner() public view returns (address) {
         return _owner;
     }
+
+    /// @notice Get total users count
+    function totalUsers() public view returns (uint256) {
+        return userCount;
+    }
+
+    /// @notice Increment group joins for a user
+    function incrementGroupJoins(address user) external {
+        // Only allow factory contract to call this (assuming factory address is set)
+        // For now, allowing any call - in production, restrict to factory
+        userGroupJoins[user]++;
+    }
+
+
+
+
+
+
 
     function handleNativeSaving(uint256 amount, address tokenToSave, address userChildContractAddress)
         private
@@ -167,16 +215,24 @@ contract Savfe {
         uint256 amount // discarded for native token; takes msg.value - SavingFee instead
     ) public payable registeredOnly(msg.sender) {
         if (msg.value < SavingFee) {
-            revert SavfeHelperLib.NotEnoughToPayGasFee();
+            revert SavfeHelperLib.InsufficientBalance("Insufficient funds to cover saving fee");
         }
 
         if (block.timestamp > maturityTime) {
             revert SavfeHelperLib.InvalidTime();
         }
 
+        if (penaltyPercentage > 100) {
+            revert SavfeHelperLib.ParameterOutOfRange("penaltyPercentage", "0-100");
+        }
+
+        if (tokenToSave != address(0) && tokenToSave != address(stableCoin)) {
+            revert SavfeHelperLib.OperationNotAllowed("Only stablecoin supported for savings");
+        }
+
         // NOTE: For now, no safeMode since no swap contract
         if (safeMode) {
-            revert SavfeHelperLib.NotSupported("No safe mode yet!");
+            revert SavfeHelperLib.NotSupported("Safe mode not yet implemented - use regular savings");
         }
 
         // user's child contract address
@@ -271,6 +327,13 @@ contract Savfe {
     function withdrawSaving(string memory nameOfSavings) public registeredOnly(msg.sender) returns (bool) {
         // initialize user's child userChildContract
         ChildSavfe userChildContract = ChildSavfe(payable(addressToUserBS[msg.sender]));
+
+        // Check if saving exists before attempting withdrawal
+        ChildSavfe.SavingDataStruct memory saving = userChildContract.getSaving(nameOfSavings);
+        if (!saving.isValid) {
+            revert SavfeHelperLib.InvalidSaving();
+        }
+
         // call withdraw savings fn
         userChildContract.withdrawSaving(nameOfSavings);
         return true;

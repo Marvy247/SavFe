@@ -44,9 +44,8 @@ export default function IncrementSavingModal({
   const handleIncrementSavingSuccess = (response: any) => {
     console.log('Increment saving successful:', response);
     toast.success('Saving incremented successfully!');
-    setTimeout(() => {
-      handleClose();
-    }, 2000);
+    // Close modal immediately and let parent component handle refetching
+    handleClose();
   };
 
   const handleIncrementSavingError = (error: any) => {
