@@ -43,28 +43,45 @@ library SavfeHelperLib {
         internal
         returns (bool)
     {
+        require(toApproveUserAddress != address(0), "Invalid approval address");
+        require(targetToken != address(0), "Invalid token address");
+        require(amountToApprove > 0, "Amount must be > 0");
+
         IERC20 token = IERC20(targetToken);
         return token.approve(toApproveUserAddress, amountToApprove);
     }
 
-    function retrieveToken(address toApproveUserAddress, address targetToken, uint256 amountToWithdraw)
+    function retrieveToken(address fromAddress, address targetToken, uint256 amountToWithdraw)
         internal
         returns (bool)
     {
-        // first request approval
+        require(fromAddress != address(0), "Invalid from address");
+        require(targetToken != address(0), "Invalid token address");
+        require(amountToWithdraw > 0, "Amount must be > 0");
+
+        // Check allowance
         require(
-            // approveAmount(toApproveUserAddress, amountToWithdraw, targetToken),
-            IERC20(targetToken).allowance(toApproveUserAddress, address(this)) >= amountToWithdraw,
+            IERC20(targetToken).allowance(fromAddress, address(this)) >= amountToWithdraw,
             SavfeHelperLib.TokenWithdrawalFailed()
         );
-        return IERC20(targetToken).transferFrom(toApproveUserAddress, address(this), amountToWithdraw);
+
+        // Transfer tokens
+        bool success = IERC20(targetToken).transferFrom(fromAddress, address(this), amountToWithdraw);
+        require(success, "Token transfer failed");
+
+        return success;
     }
 
     function transferToken(address token, address recipient, uint256 amount) internal returns (bool isDelivered) {
+        require(token != address(0), "Invalid token address");
+        require(recipient != address(0), "Invalid recipient address");
+        require(amount > 0, "Amount must be > 0");
+
         IERC20 Token = IERC20(token);
 
         // convert address to Byte
         isDelivered = Token.transfer(recipient, amount);
+        require(isDelivered, "Token transfer failed");
 
         emit TokenWithdrawal(address(this), recipient, amount);
     }

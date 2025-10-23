@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ChildContract.sol";
 import "./SavfeHelperLib.sol";
 
-contract Savfe {
+contract Savfe is ReentrancyGuard, Pausable, Ownable {
     // *** Contract parameters ***
     IERC20 public stableCoin;
-    address private _owner; // Renamed from masterAddress
+    address public factoryContract; // For integration with RotatingSavingsGroupFactory
+
     // *** Fountain ***
     uint256 public fountain;
 
@@ -17,10 +20,7 @@ contract Savfe {
     mapping(address => address) addressToUserBS;
     uint256 public userCount;
 
-
-
     // *** savings values ***
-    // editing value from 0.0001 to 1wei
     uint256 public JoinLimitFee = 0 ether;
     uint256 public SavingFee = 0.0001 ether;
     uint256 public ChildContractGasFee = SavingFee / 20;
@@ -28,19 +28,29 @@ contract Savfe {
     // *** User analytics ***
     mapping(address => uint256) public userGroupJoins;
 
-    constructor(address _stableCoin) payable {
+    // *** Emergency ***
+    bool public emergencyMode;
+
+    event EmergencyModeActivated();
+    event EmergencyModeDeactivated();
+    event FactoryContractSet(address indexed factory);
+
+    constructor(address _stableCoin) payable Ownable(msg.sender) {
         stableCoin = IERC20(_stableCoin);
-        _owner = msg.sender;
         userCount = 0;
         fountain = msg.value;
-
-
+        emergencyMode = false;
     }
 
     modifier inhouseOnly() {
-        if (msg.sender != _owner) {
+        if (msg.sender != owner()) {
             revert SavfeHelperLib.MasterCallRequired();
         }
+        _;
+    }
+
+    modifier notInEmergency() {
+        require(!emergencyMode, "Emergency mode active");
         _;
     }
 
@@ -63,7 +73,7 @@ contract Savfe {
         _;
     }
 
-    function joinSavfe() public returns (address) {
+    function joinSavfe() public whenNotPaused notInEmergency returns (address) {
         address ownerAddress = msg.sender;
         address currAddr = addressToUserBS[ownerAddress];
         if (currAddr != address(0)) {
@@ -89,19 +99,13 @@ contract Savfe {
         public
         payable
         fromASavfeChildOnly(ownerAddress)
+        nonReentrant
         returns (bool)
     {
-        // check amount sent
-        // if (amount < poolFee) revert SavfeHelperLib.AmountNotEnough();
+        require(amount > 0, "Amount must be > 0");
+        require(ownerAddress != address(0), "Invalid owner address");
         // retrieve stable coin used from owner address
         return SavfeHelperLib.retrieveToken(msg.sender, address(stableCoin), amount);
-        // convert to original token using crossChainSwap()
-        // crossChainSwap(
-        //     stableCoin,
-        //     originalToken,
-        //     amount,
-        //     ownerAddress // send to owner address directly
-        // );
     }
 
     /// Edit internal stablecoin data
@@ -139,7 +143,8 @@ contract Savfe {
     }
 
     /// @notice Withdraw fees to specified address
-    function withdrawFee(address payable _to) external inhouseOnly {
+    function withdrawFee(address payable _to) external inhouseOnly nonReentrant {
+        require(_to != address(0), "Invalid withdrawal address");
         require(address(this).balance >= fountain, "Insufficient balance above fountain");
         uint256 withdrawableAmount = address(this).balance - fountain;
         require(withdrawableAmount > 0, "No fees to withdraw");
@@ -148,21 +153,46 @@ contract Savfe {
         require(success, "Fee withdrawal failed");
     }
 
-    function dripFountain() public inhouseOnly {
-        // send balance - fountain to masterAddress
+    function dripFountain() public inhouseOnly nonReentrant {
+        // send balance - fountain to owner
         uint256 balance = address(this).balance;
         if (balance > fountain) {
-            payable(_owner).transfer(balance - fountain);
+            payable(owner()).transfer(balance - fountain);
         }
     }
 
-    function transferOwnership(address newOwner) public inhouseOnly {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        _owner = newOwner;
+    /// @notice Set factory contract address for integration
+    function setFactoryContract(address _factory) external inhouseOnly {
+        require(_factory != address(0), "Invalid factory address");
+        factoryContract = _factory;
+        emit FactoryContractSet(_factory);
     }
 
-    function owner() public view returns (address) {
-        return _owner;
+    /// @notice Emergency pause all operations
+    function activateEmergencyMode() external inhouseOnly {
+        emergencyMode = true;
+        _pause();
+        emit EmergencyModeActivated();
+    }
+
+    /// @notice Deactivate emergency mode
+    function deactivateEmergencyMode() external inhouseOnly {
+        emergencyMode = false;
+        _unpause();
+        emit EmergencyModeDeactivated();
+    }
+
+    /// @notice Emergency withdrawal for users (only in emergency mode)
+    function emergencyWithdraw(address user) external inhouseOnly {
+        require(emergencyMode, "Not in emergency mode");
+        address childContract = addressToUserBS[user];
+        require(childContract != address(0), "User not registered");
+
+        // Transfer any remaining balance to user
+        uint256 balance = address(this).balance;
+        if (balance > fountain) {
+            payable(user).transfer(balance - fountain);
+        }
     }
 
     /// @notice Get total users count
@@ -170,10 +200,10 @@ contract Savfe {
         return userCount;
     }
 
-    /// @notice Increment group joins for a user
+    /// @notice Increment group joins for a user (only factory can call)
     function incrementGroupJoins(address user) external {
-        // Only allow factory contract to call this (assuming factory address is set)
-        // For now, allowing any call - in production, restrict to factory
+        require(msg.sender == factoryContract, "Only factory can increment");
+        require(user != address(0), "Invalid user address");
         userGroupJoins[user]++;
     }
 
@@ -213,22 +243,12 @@ contract Savfe {
         bool safeMode,
         address tokenToSave, // address 0 for native coin
         uint256 amount // discarded for native token; takes msg.value - SavingFee instead
-    ) public payable registeredOnly(msg.sender) {
-        if (msg.value < SavingFee) {
-            revert SavfeHelperLib.InsufficientBalance("Insufficient funds to cover saving fee");
-        }
-
-        if (block.timestamp > maturityTime) {
-            revert SavfeHelperLib.InvalidTime();
-        }
-
-        if (penaltyPercentage > 100) {
-            revert SavfeHelperLib.ParameterOutOfRange("penaltyPercentage", "0-100");
-        }
-
-        if (tokenToSave != address(0) && tokenToSave != address(stableCoin)) {
-            revert SavfeHelperLib.OperationNotAllowed("Only stablecoin supported for savings");
-        }
+    ) public payable registeredOnly(msg.sender) whenNotPaused notInEmergency nonReentrant {
+        require(bytes(nameOfSaving).length > 0, "Saving name cannot be empty");
+        require(msg.value >= SavingFee, SavfeHelperLib.InsufficientBalance("Insufficient funds to cover saving fee"));
+        require(block.timestamp < maturityTime, SavfeHelperLib.InvalidTime());
+        require(penaltyPercentage <= 100, SavfeHelperLib.ParameterOutOfRange("penaltyPercentage", "0-100"));
+        require(tokenToSave == address(0) || tokenToSave == address(stableCoin), SavfeHelperLib.OperationNotAllowed("Only native or stablecoin supported"));
 
         // NOTE: For now, no safeMode since no swap contract
         if (safeMode) {
@@ -241,20 +261,7 @@ contract Savfe {
         // Handle token sent
         uint256 amountRetrieved = handleNativeSaving(amount, tokenToSave, userChildContractAddress);
 
-        // TODO:  perform conversion for stableCoin
-        // functionality for safe mode
-        // if (safeMode) {
-        //     amountToSave = crossChainSwap(
-        //         savingToken,
-        //         stableCoin,
-        //         amount,
-        //         address(this)
-        //     );
-        //     savingToken = stableCoin;
-        // }
-
         /// send savings request to child contract with a little gas
-        // Initialize user's child contract
         ChildSavfe userChildContract = ChildSavfe(userChildContractAddress);
 
         userChildContract.createSaving{
@@ -283,37 +290,32 @@ contract Savfe {
         public
         payable
         registeredOnly(msg.sender)
+        whenNotPaused
+        notInEmergency
+        nonReentrant
     {
-        // initialize userChildContract
+        require(bytes(nameOfSavings).length > 0, "Saving name cannot be empty");
+        require(amount > 0, "Amount must be > 0");
+
         address payable userChildContractAddress = payable(addressToUserBS[msg.sender]);
         ChildSavfe userChildContract = ChildSavfe(userChildContractAddress);
 
         address savingToken = userChildContract.getSavingTokenId(nameOfSavings);
+        require(savingToken != address(0) || tokenToRetrieve == address(0), "Token mismatch");
+
         bool isNativeToken = savingToken == address(0);
-        // todo: perform amount conversion and everything
         uint256 savingPlusAmount = amount;
-        // todo: check savings detail by reading the storage of userChildContract
+
         bool isSafeMode = userChildContract.getSavingMode(nameOfSavings);
         if (isSafeMode) {
-            // savingPlusAmount = crossChainSwap(
-            //     userChildContract.getSavingTokenId(nameOfSavings),
-            //     stableCoin,
-            //     savingPlusAmount,
-            //     address(this)
-            // );
             tokenToRetrieve = address(stableCoin);
         }
+
         if (!isNativeToken) {
-            // approve child contract withdrawing token
-            require(
-                SavfeHelperLib.approveAmount(userChildContractAddress, savingPlusAmount, tokenToRetrieve),
-                "Savings invalid"
-            );
+            // For ERC20, approval is handled in createSaving, tokens transferred via transferFrom in ChildContract
         } else {
             savingPlusAmount = handleNativeSaving(amount, savingToken, userChildContractAddress);
         }
-
-        // call withdrawSavings
 
         userChildContract.incrementSaving{
             value: isNativeToken ? ChildContractGasFee + savingPlusAmount : ChildContractGasFee
@@ -324,15 +326,21 @@ contract Savfe {
     ///
     ///    string nameOfSaving
     ///
-    function withdrawSaving(string memory nameOfSavings) public registeredOnly(msg.sender) returns (bool) {
-        // initialize user's child userChildContract
+    function withdrawSaving(string memory nameOfSavings)
+        public
+        registeredOnly(msg.sender)
+        whenNotPaused
+        notInEmergency
+        nonReentrant
+        returns (bool)
+    {
+        require(bytes(nameOfSavings).length > 0, "Saving name cannot be empty");
+
         ChildSavfe userChildContract = ChildSavfe(payable(addressToUserBS[msg.sender]));
 
         // Check if saving exists before attempting withdrawal
         ChildSavfe.SavingDataStruct memory saving = userChildContract.getSaving(nameOfSavings);
-        if (!saving.isValid) {
-            revert SavfeHelperLib.InvalidSaving();
-        }
+        require(saving.isValid, SavfeHelperLib.InvalidSaving());
 
         // call withdraw savings fn
         userChildContract.withdrawSaving(nameOfSavings);

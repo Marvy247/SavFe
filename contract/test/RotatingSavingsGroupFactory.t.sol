@@ -42,7 +42,7 @@ contract RotatingSavingsGroupFactoryTest is Test {
 
         // deploy factory
         vm.prank(userCreator);
-        factory = new RotatingSavingsGroupFactory(address(0)); // dummy address for test
+        factory = new RotatingSavingsGroupFactory(payable(address(0))); // dummy address for test
     }
 
     function test_CreateGroup_and_capture_members_array() public {
@@ -201,8 +201,8 @@ contract RotatingSavingsGroupFactoryTest is Test {
 
         // call withdrawEarnings to recipient address
         uint256 before = recipient.balance;
-        // withdrawEarnings has no access control in contract, anyone can call and pass an address
-        vm.prank(userCreator);
+        // withdrawEarnings requires owner access
+        vm.prank(userCreator); // userCreator is the owner
         factory.withdrawEarnings(payable(recipient));
         assertEq(recipient.balance, before + earnings);
 

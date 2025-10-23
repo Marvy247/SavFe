@@ -14,7 +14,7 @@ contract DeploySavfeScript is Script {
         address stableCoinAddress = 0x036cbD53842C5426634e7929541Ec231bcE1BdAE; // Base Sepolia USDC address
 
         Savfe savfe = new Savfe(stableCoinAddress);
-        RotatingSavingsGroupFactory rotatingSavingsGroupFactory = new RotatingSavingsGroupFactory(address(savfe));
+        RotatingSavingsGroupFactory rotatingSavingsGroupFactory = new RotatingSavingsGroupFactory(payable(address(savfe)));
 
         vm.stopBroadcast();
 

@@ -91,7 +91,8 @@ contract ChildSavfe {
             SavfeHelperLib.retrieveToken(SavfeAddress, address(stableCoin), amountToRetrieve);
         } else {
             if (tokenId != address(0)) {
-                SavfeHelperLib.retrieveToken(SavfeAddress, tokenId, amountToRetrieve);
+                // For ERC20, transfer directly from user to child contract
+                require(IERC20(tokenId).transferFrom(ownerAddress, address(this), amountToRetrieve), "ERC20 transfer failed");
             } else {
                 // case native token
                 savingsAmount = msg.value;
@@ -135,7 +136,8 @@ contract ChildSavfe {
             SavfeHelperLib.retrieveToken(SavfeAddress, address(stableCoin), savingPlusAmount);
         } else {
             if (!isNativeToken) {
-                SavfeHelperLib.retrieveToken(SavfeAddress, toFundSavings.tokenId, savingPlusAmount);
+                // For ERC20, transfer directly from user to child contract
+                require(IERC20(toFundSavings.tokenId).transferFrom(ownerAddress, address(this), savingPlusAmount), "ERC20 transfer failed");
             } else {
                 require(msg.value >= savingPlusAmount + childContractGasFee, SavfeHelperLib.InvalidIncrementValue());
                 savingPlusAmount = msg.value;

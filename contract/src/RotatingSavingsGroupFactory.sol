@@ -2,11 +2,13 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./newContracts/Savfe.sol";
 
-contract RotatingSavingsGroupFactory is ReentrancyGuard {
-    address public savfeContract;
+contract RotatingSavingsGroupFactory is ReentrancyGuard, Ownable {
+    address payable public savfeContract;
 
-    constructor(address _savfeContract) {
+    constructor(address payable _savfeContract) Ownable(msg.sender) {
         savfeContract = _savfeContract;
     }
     struct Group {
@@ -82,6 +84,7 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
     function joinGroup(uint256 _groupId) external {
         Group storage group = groups[_groupId];
         require(group.exists, "Group does not exist");
+        require(group.members.length < 10, "Group is full (max 10 members)"); // Add reasonable limit
 
         for (uint256 i = 0; i < group.members.length; i++) {
             require(group.members[i] != msg.sender, "Already a member");
@@ -89,14 +92,30 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
 
         group.members.push(msg.sender);
         emit JoinedGroup(_groupId, msg.sender);
+
+        // Integrate with Savfe analytics if factory is set
+        if (savfeContract != address(0)) {
+            try Savfe(savfeContract).incrementGroupJoins(msg.sender) {} catch {}
+        }
     }
 
     /// @notice Contribute to a group
-    function contribute(uint256 _groupId) external payable {
+    function contribute(uint256 _groupId) external payable nonReentrant {
         Group storage currentGroup = groups[_groupId];
         require(currentGroup.exists, "Group does not exist");
+        require(currentGroup.members.length > 0, "No members in group");
         require(msg.value == currentGroup.contributionAmount, "Incorrect contribution amount");
         require(!hasContributedThisRound[_groupId][msg.sender], "Already contributed this round");
+
+        // Check if sender is a member
+        bool isMember = false;
+        for (uint256 i = 0; i < currentGroup.members.length; i++) {
+            if (currentGroup.members[i] == msg.sender) {
+                isMember = true;
+                break;
+            }
+        }
+        require(isMember, "Not a member of this group");
 
         // ✅ Deduct fee once
         uint256 fee = (msg.value * 1) / 100;
@@ -117,7 +136,7 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
     }
 
     /// @notice Internal payout function
-    function _payout(uint256 _groupId) internal nonReentrant {
+    function _payout(uint256 _groupId) internal {
         Group storage currentGroup = groups[_groupId];
         require(currentGroup.exists, "Group does not exist");
 
@@ -148,7 +167,7 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
     }
 
     /// @notice Withdraw platform earnings
-    function withdrawEarnings(address payable _to) external nonReentrant {
+    function withdrawEarnings(address payable _to) external onlyOwner nonReentrant {
         require(contractEarnings > 0, "No earnings to withdraw");
         require(_to != address(0), "Invalid withdrawal address");
         uint256 amount = contractEarnings;
@@ -207,8 +226,8 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
     /// @notice Create a new challenge
     function createChallenge(string memory _name, uint256 _targetAmount, uint256 _duration) external {
         require(_targetAmount > 0, "Target amount must be > 0");
-        require(_duration > 0, "Duration must be > 0");
-        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(_duration >= 1 days && _duration <= 365 days, "Duration must be between 1 day and 1 year");
+        require(bytes(_name).length > 0 && bytes(_name).length <= 50, "Name must be 1-50 characters");
 
         challengeCounter++;
         Challenge storage newChallenge = challenges[challengeCounter];
@@ -227,6 +246,7 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
         Challenge storage challenge = challenges[_challengeId];
         require(challenge.active, "Challenge is not active");
         require(block.timestamp < challenge.startTime + challenge.duration, "Challenge has ended");
+        require(challenge.participants.length < 100, "Challenge is full (max 100 participants)"); // Reasonable limit
 
         // Check if already joined
         for (uint256 i = 0; i < challenge.participants.length; i++) {
@@ -238,11 +258,12 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
     }
 
     /// @notice Contribute to a challenge
-    function contributeToChallenge(uint256 _challengeId) external payable {
+    function contributeToChallenge(uint256 _challengeId) external payable nonReentrant {
         Challenge storage challenge = challenges[_challengeId];
         require(challenge.active, "Challenge is not active");
         require(block.timestamp < challenge.startTime + challenge.duration, "Challenge has ended");
         require(msg.value > 0, "Contribution must be > 0");
+        require(msg.value <= challenge.targetAmount, "Contribution exceeds target amount");
 
         // Check if participant
         bool isParticipant = false;
@@ -265,6 +286,7 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
         Challenge storage challenge = challenges[_challengeId];
         require(challenge.active, "Challenge is not active");
         require(block.timestamp >= challenge.startTime + challenge.duration, "Challenge has not ended yet");
+        require(challenge.participants.length > 0, "No participants in challenge");
 
         challenge.active = false;
 
@@ -281,7 +303,7 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
             }
         }
 
-        if (winner != address(0)) {
+        if (winner != address(0) && challenge.totalContributions > 0) {
             // Transfer total contributions to winner
             (bool success,) = payable(winner).call{value: challenge.totalContributions}("");
             require(success, "Reward transfer failed");
@@ -289,10 +311,4 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard {
             emit ChallengeCompleted(_challengeId, winner);
         }
     }
-
-
-
-
-
-
 }
