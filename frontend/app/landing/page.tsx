@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { ConnectWallet } from '@coinbase/onchainkit/wallet';
-import { Identity, Name, Avatar } from '@coinbase/onchainkit/identity';
+import { DisplayName } from "@/components/DisplayName";
 import { useState, useEffect } from "react";
 
 export default function LandingPage() {
@@ -52,10 +52,12 @@ export default function LandingPage() {
           <div className="flex justify-center mt-10 space-x-6">
             {isClient && isConnected ? (
               <div className="flex items-center space-x-4">
-                <Identity address={address}>
-                  <Avatar />
-                  <Name />
-                </Identity>
+                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-lg font-bold text-primary">
+                    {address ? address.slice(2, 4).toUpperCase() : "U"}
+                  </span>
+                </div>
+                {address && <DisplayName address={address} />}
                 <Link href="/dashboard">
                   <Button size="lg" className="px-10 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 bg-primary hover:bg-primary/90">
                     Go to Dashboard
@@ -63,11 +65,7 @@ export default function LandingPage() {
                 </Link>
               </div>
             ) : (
-              <ConnectWallet>
-                <Button size="lg" className="px-10 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300">
-                  Connect Wallet
-                </Button>
-              </ConnectWallet>
+              <ConnectWallet />
             )}
             <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 hover:bg-primary hover:text-white transition-all duration-300">
               Learn More

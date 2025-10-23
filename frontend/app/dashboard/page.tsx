@@ -24,9 +24,7 @@ const QuickActions = dynamic(() => import("@/components/QuickActions"), {
   ssr: false,
   loading: () => null,
 });
-const Identity = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Identity), { ssr: false });
-const Avatar = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Avatar), { ssr: false });
-const Name = dynamic(() => import('@coinbase/onchainkit/identity').then(mod => mod.Name), { ssr: false });
+
 import { Swap } from '@coinbase/onchainkit/swap';
 import { FundButton } from '@coinbase/onchainkit/fund';
 // import { Notification } from '@coinbase/onchainkit/notification'; // Not available yet

@@ -3,7 +3,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Avatar } from "@coinbase/onchainkit/identity";
 import { DisplayName } from "./DisplayName";
 import { useAccount } from "wagmi";
 
@@ -21,7 +20,11 @@ export default function DashboardHeader() {
     <Card className="w-full">
       <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Avatar address={address} className="h-16 w-16" />
+          <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
+            <span className="text-2xl font-bold text-primary">
+              {address ? address.slice(2, 4).toUpperCase() : "U"}
+            </span>
+          </div>
           <div>
             <h2 className="text-2xl font-bold">
               Welcome back, {address ? <DisplayName address={address} /> : "User"}

@@ -4,7 +4,7 @@ import { useReadContract } from "wagmi";
 import { Address } from "viem";
 
 type DisplayNameProps = {
-  address: Address;
+  address: Address | undefined;
 };
 
 function truncateAddress(address: Address) {
@@ -27,6 +27,8 @@ const basenamesContract = {
 } as const;
 
 export function DisplayName({ address }: DisplayNameProps) {
+  if (!address) return <span></span>;
+
   const { data: basename, isLoading } = useReadContract({
     ...basenamesContract,
     functionName: "getName",
