@@ -42,6 +42,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Target, User, Users, Brain, Award } from "lucide-react";
 import Link from "next/link";
 
@@ -66,6 +67,7 @@ interface GroupData {
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState("savings");
+  const [savingsSubTab, setSavingsSubTab] = useState("individual");
   const [showJoinModal, setShowJoinModal] = useState(false);
   const { writeContract, isPending } = useWriteContract();
 
@@ -371,27 +373,40 @@ export default function DashboardPage() {
               )}
 
               {activeTab === "savings" && (
-                <div className="space-y-8">
-                  <SavingsOverview />
-                  <SavingsVisualization />
-                  <MyGroups />
-                  <GroupCards />
-                  <GroupsTable />
-                </div>
+                <Tabs value={savingsSubTab} onValueChange={setSavingsSubTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="individual" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Individual Savings
+                    </TabsTrigger>
+                    <TabsTrigger value="group" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Group Savings
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="individual" className="space-y-8 mt-6">
+                    <SavingsOverview />
+                    <SavingsVisualization />
+                    <SavingsDashboard />
+                  </TabsContent>
+
+                  <TabsContent value="group" className="space-y-8 mt-6">
+                    <MyGroups />
+                    <GroupCards />
+                    <GroupsTable />
+                    <CreateGroup />
+                  </TabsContent>
+                </Tabs>
               )}
             </div>
 
             <div className="lg:col-span-1 space-y-6">
-              <div id="savings-dashboard">
-                <SavingsDashboard />
-              </div>
               <Card id="savfe-actions" className="gradient-card-hover">
-
                 <CardContent>
                   <PiggySavfeActions />
                 </CardContent>
               </Card>
-              <CreateGroup />
 
               <div id="emergency-withdraw">
                 <EmergencyWithdraw />
