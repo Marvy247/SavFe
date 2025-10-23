@@ -27,7 +27,7 @@ export default function DashboardHeader() {
           </div>
           <div>
             <h2 className="text-2xl font-bold">
-              Welcome back, {address ? <DisplayName address={address} /> : "User"}
+              Hello, Welcome back
             </h2>
             <p className="text-muted-foreground">Here is your savings summary.</p>
           </div>
