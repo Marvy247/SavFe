@@ -3,7 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Avatar, Name } from "@coinbase/onchainkit/identity";
+import { Avatar } from "@coinbase/onchainkit/identity";
+import { DisplayName } from "./DisplayName";
 import { useAccount } from "wagmi";
 
 export default function DashboardHeader() {
@@ -23,7 +24,7 @@ export default function DashboardHeader() {
           <Avatar address={address} className="h-16 w-16" />
           <div>
             <h2 className="text-2xl font-bold">
-              Welcome back, <Name address={address} />
+              Welcome back, {address ? <DisplayName address={address} /> : "User"}
             </h2>
             <p className="text-muted-foreground">Here is your savings summary.</p>
           </div>
