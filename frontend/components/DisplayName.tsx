@@ -13,8 +13,6 @@ function truncateAddress(address: Address) {
 }
 
 export function DisplayName({ address }: DisplayNameProps) {
-  if (!address) return <span></span>;
-
   const chainId = useChainId();
 
   // Basenames contract addresses for different chains
@@ -25,12 +23,7 @@ export function DisplayName({ address }: DisplayNameProps) {
 
   const contractAddress = basenamesAddresses[chainId as keyof typeof basenamesAddresses];
 
-  if (!contractAddress) {
-    // Fallback to truncated address if chain not supported
-    return <span>{truncateAddress(address)}</span>;
-  }
-
-  const basenamesContract = {
+  const basenamesContract = contractAddress ? {
     address: contractAddress as Address,
     abi: [
       {
@@ -41,19 +34,28 @@ export function DisplayName({ address }: DisplayNameProps) {
         type: "function",
       },
     ],
-  } as const;
+  } as const : null;
 
-  const { data: basename, isLoading } = useReadContract({
-    ...basenamesContract,
-    functionName: "getName",
-    args: [address],
-  });
+  const { data: basename, isLoading } = useReadContract(
+    basenamesContract && address ? {
+      ...basenamesContract,
+      functionName: "getName",
+      args: [address],
+    } : {} as any
+  );
+
+  if (!address) return <span></span>;
+
+  if (!contractAddress) {
+    // Fallback to truncated address if chain not supported
+    return <span>{truncateAddress(address)}</span>;
+  }
 
   if (isLoading) {
     return <span>Loading...</span>;
   }
 
-  if (basename && basename.trim() !== "") {
+  if (typeof basename === 'string' && basename.trim() !== "") {
     return <span>{basename}.base.eth</span>;
   }
 
