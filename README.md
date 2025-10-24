@@ -1,4 +1,4 @@
-# SavFe: The Future of Social Savings, Built on Base
+# PiggySavfe: The Future of Social Savings, Built on Base
 
 **SavFe makes saving money simple, social, and rewarding by turning it into a game. We leverage the power of Base to provide a user experience so seamless, you'll forget you're using crypto.**
 
@@ -133,4 +133,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**SavFe is more than a DApp; it's a blueprint for the future of accessible, onchain finance. By leveraging the best of Base, we're turning a powerful financial primitive into an experience that's ready for everyone.**
+**PiggySavfe is more than a DApp; it's a blueprint for the future of accessible, onchain finance. By leveraging the best of Base, we're turning a powerful financial primitive into an experience that's ready for everyone.**
