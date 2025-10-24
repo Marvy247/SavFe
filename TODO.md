@@ -1,0 +1,4 @@
+- [x] Install AOS library
+- [x] Import and initialize AOS in the landing page
+- [x] Add AOS animation attributes to key sections (hero, stats, how it works, features, testimonials)
+- [x] Test the animations by running the development server

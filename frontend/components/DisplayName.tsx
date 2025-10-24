@@ -41,7 +41,7 @@ export function DisplayName({ address }: DisplayNameProps) {
       ...basenamesContract,
       functionName: "getName",
       args: [address],
-    } : {} as any
+    } : undefined
   );
 
   if (!address) return <span></span>;
@@ -55,7 +55,7 @@ export function DisplayName({ address }: DisplayNameProps) {
     return <span>Loading...</span>;
   }
 
-  if (typeof basename === 'string' && basename.trim() !== "") {
+  if (basename && typeof basename === 'string' && basename.trim() !== "") {
     return <span>{basename}.base.eth</span>;
   }
 
