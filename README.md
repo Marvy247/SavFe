@@ -103,7 +103,7 @@ SavFe is deployed on both Base Sepolia (testnet) and Base (mainnet):
 3.  **Set up environment variables:**
     Create a `.env.local` file in the frontend directory with:
     ```env
-    NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
+    NEXT_PUBLIC_BASE_RPC_URL=https://sepolia.base.org
     NEXT_PUBLIC_ONCHAINKIT_API_KEY=your_api_key
     ```
 4.  **Run the contracts (local development):**

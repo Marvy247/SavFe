@@ -100,15 +100,14 @@ contract ChildSavfe {
         }
 
         // store saving to map of savings
-        savings[name] = SavingDataStruct({
-            amount: savingsAmount,
-            maturityTime: maturityTime,
-            startTime: startTime,
-            tokenId: tokenId,
-            penaltyPercentage: penaltyPercentage,
-            isSafeMode: isSafeMode,
-            isValid: true
-        });
+        SavingDataStruct storage newSaving = savings[name];
+        newSaving.amount = savingsAmount;
+        newSaving.maturityTime = maturityTime;
+        newSaving.startTime = startTime;
+        newSaving.tokenId = tokenId;
+        newSaving.penaltyPercentage = penaltyPercentage;
+        newSaving.isSafeMode = isSafeMode;
+        newSaving.isValid = true;
 
         // addSavingName(name);
         addSavingName(name);

@@ -46,7 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Target, User, Users, Brain, Award } from "lucide-react";
 import Link from "next/link";
 
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { FACTORY_ABI, SAVFE_ADDRESS, SAVFE_ABI, readGroupData } from "@/lib/contract";
 import { formatEther } from "viem";
 import { useState } from "react";
@@ -69,7 +69,10 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("savings");
   const [savingsSubTab, setSavingsSubTab] = useState("individual");
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { isSuccess: joinSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   const { data: childContractAddress, refetch: refetchChildContract } = useReadContract({
     address: SAVFE_ADDRESS,
@@ -136,6 +139,15 @@ export default function DashboardPage() {
     }
   }, [address, childContractAddress]);
 
+  // Close modal on successful join
+  React.useEffect(() => {
+    if (joinSuccess) {
+      setShowJoinModal(false);
+      setActiveTab("savings");
+      refetchChildContract();
+    }
+  }, [joinSuccess, refetchChildContract]);
+
   const handleJoinSavfe = async () => {
     try {
       writeContract({
@@ -144,10 +156,6 @@ export default function DashboardPage() {
         functionName: 'joinSavfe',
         args: [],
       });
-      // Refetch child contract address after a delay
-      setTimeout(() => {
-        refetchChildContract();
-      }, 2000);
     } catch (error) {
       console.error('Join Savfe failed:', error);
     }

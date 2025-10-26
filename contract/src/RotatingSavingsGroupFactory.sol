@@ -15,10 +15,10 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard, Ownable {
         address creator;
         address[] members;
         uint256 contributionAmount;
-        uint256 contributionPeriod;
-        uint256 currentRound;
+        uint32 contributionPeriod;
+        uint32 currentRound;
         uint256 lastPayoutTime;
-        uint256 contributionsThisRound;
+        uint16 contributionsThisRound;
         uint256 pot; // ✅ Track contributions (after fee deduction)
         bool exists;
     }
@@ -66,13 +66,13 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard, Ownable {
     /// @notice Create a new rotating savings group
     function createGroup(uint256 _contributionAmount, uint256 _contributionPeriod) external {
         require(_contributionAmount > 0, "Contribution must be > 0");
-        require(_contributionPeriod > 0, "Contribution period must be > 0");
+        require(_contributionPeriod > 0 && _contributionPeriod <= type(uint32).max, "Contribution period must be > 0 and <= 2^32-1");
 
         groupCounter++;
         Group storage newGroup = groups[groupCounter];
         newGroup.creator = msg.sender;
         newGroup.contributionAmount = _contributionAmount;
-        newGroup.contributionPeriod = _contributionPeriod;
+        newGroup.contributionPeriod = uint32(_contributionPeriod);
         newGroup.currentRound = 1;
         newGroup.lastPayoutTime = block.timestamp;
         newGroup.exists = true;
@@ -194,10 +194,10 @@ contract RotatingSavingsGroupFactory is ReentrancyGuard, Ownable {
             g.creator,
             g.members,
             g.contributionAmount,
-            g.contributionPeriod,
-            g.currentRound,
+            uint256(g.contributionPeriod),
+            uint256(g.currentRound),
             g.lastPayoutTime,
-            g.contributionsThisRound,
+            uint256(g.contributionsThisRound),
             g.pot
         );
     }

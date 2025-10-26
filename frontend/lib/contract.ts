@@ -1,9 +1,9 @@
 import { createPublicClient, http } from "viem";
 import { baseSepolia } from "wagmi/chains";
 
-export const FACTORY_ADDRESS = "0x44c706e5aB987986719DfE903694977b9de56F80" as `0x${string}`;
+export const FACTORY_ADDRESS = "0x657740711A1Cd13412e81dE1cDF1F055C8AF28C6" as `0x${string}`;
 
-export const SAVFE_ADDRESS = "0xc338ad39C4d8dd803368C183479Ee35788f8F990" as `0x${string}`;
+export const SAVFE_ADDRESS = "0x462d4b5435FdFBa96EbB1f9EBe60b1d7c721B1fa" as `0x${string}`;
 
 export const NFT_ADDRESS = "0x81B0EA2170617800303c7d85e46C77A63a5A945c" as `0x${string}`;
 

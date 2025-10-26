@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction';
 import { FACTORY_ABI, FACTORY_ADDRESS } from "../lib/contract";
+import { parseEther } from 'viem';
 import toast from "react-hot-toast";
 import {
   Card,
@@ -14,24 +15,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Info, DollarSign, Calendar } from "lucide-react";
 
 export default function CreateGroup() {
   const [amount, setAmount] = useState<string>("");
   const [period, setPeriod] = useState<string>("");
 
-  const createGroupCalls = (amount && period) ? [{
+  // Validation
+  const amountNum = parseFloat(amount);
+  const periodNum = parseInt(period);
+  const isValidAmount = amountNum > 0 && amountNum <= 100; // Max 100 ETH
+  const isValidPeriod = periodNum >= 1 && periodNum <= 365; // 1 day to 1 year
+
+  const createGroupCalls = (isValidAmount && isValidPeriod) ? [{
     to: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: "createGroup",
     args: [
-      BigInt(Math.floor(parseFloat(amount) * 10 ** 18)),
-      BigInt(parseInt(period) * 24 * 60 * 60),
+      parseEther(amount),
+      BigInt(periodNum * 24 * 60 * 60),
     ],
   }] : [];
 
   const handleCreateGroupSuccess = (response: any) => {
     console.log('Create group successful:', response);
     toast.success('Group created successfully!');
+    // Reset form
+    setAmount("");
+    setPeriod("");
   };
 
   const handleCreateGroupError = (error: any) => {
@@ -75,13 +86,25 @@ export default function CreateGroup() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Info Alert */}
+        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-800 dark:text-blue-200">
+              <p className="font-medium mb-1">How Rotating Savings Groups Work</p>
+              <p>Members contribute regularly and take turns receiving the full pot. Groups can have up to 10 members with contribution periods from 1 day to 1 year.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Amount Input */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label
               htmlFor="amount"
-              className="text-sm font-semibold text-card-foreground"
+              className="text-sm font-semibold text-card-foreground flex items-center gap-2"
             >
+              <DollarSign className="h-4 w-4" />
               Contribution Amount (ETH)
             </Label>
             <div className="relative">
@@ -92,8 +115,9 @@ export default function CreateGroup() {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.1"
                 step="0.01"
-                min="0"
-                className="pr-12"
+                min="0.01"
+                max="100"
+                className={`pr-12 ${amount && !isValidAmount ? 'border-red-500 focus:border-red-500' : ''}`}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                 <Badge variant="secondary" className="text-xs">
@@ -101,14 +125,18 @@ export default function CreateGroup() {
                 </Badge>
               </div>
             </div>
+            {amount && !isValidAmount && (
+              <p className="text-xs text-red-600 dark:text-red-400">Amount must be between 0.01 and 100 ETH</p>
+            )}
           </div>
 
           {/* Period Input */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label
               htmlFor="period"
-              className="text-sm font-semibold text-card-foreground"
+              className="text-sm font-semibold text-card-foreground flex items-center gap-2"
             >
+              <Calendar className="h-4 w-4" />
               Contribution Period (days)
             </Label>
             <div className="relative">
@@ -119,7 +147,8 @@ export default function CreateGroup() {
                 onChange={(e) => setPeriod(e.target.value)}
                 placeholder="30"
                 min="1"
-                className="pr-12"
+                max="365"
+                className={`pr-12 ${period && !isValidPeriod ? 'border-red-500 focus:border-red-500' : ''}`}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                 <Badge variant="secondary" className="text-xs">
@@ -127,8 +156,24 @@ export default function CreateGroup() {
                 </Badge>
               </div>
             </div>
+            {period && !isValidPeriod && (
+              <p className="text-xs text-red-600 dark:text-red-400">Period must be between 1 and 365 days</p>
+            )}
           </div>
         </div>
+
+        {/* Preview */}
+        {isValidAmount && isValidPeriod && (
+          <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">Group Preview</h4>
+            <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
+              <p>• Each member contributes <strong>{amountNum} ETH</strong></p>
+              <p>• Contribution cycle: <strong>{periodNum} days</strong></p>
+              <p>• Maximum group size: <strong>10 members</strong></p>
+              <p>• Smart contract secured on Base blockchain</p>
+            </div>
+          </div>
+        )}
 
         {/* Submit Button */}
         <Transaction
@@ -137,7 +182,7 @@ export default function CreateGroup() {
           onError={handleCreateGroupError}
         >
           <TransactionButton
-            disabled={!amount || !period}
+            disabled={!isValidAmount || !isValidPeriod}
             className="w-full"
             text="Create Group"
           />

@@ -6,7 +6,7 @@ import { coinbaseWallet, injected, metaMask, walletConnect } from "wagmi/connect
 const projectId = "ba5022e3d5959b0901411949b04d2b3b";
 
 export const config = createConfig({
-  chains: [base, baseSepolia],
+  chains: [baseSepolia],
   connectors: [
     // Order matters. The coinbaseWallet with preference: 'all' should handle most cases.
     coinbaseWallet({
@@ -18,7 +18,6 @@ export const config = createConfig({
     metaMask(),
   ],
   transports: {
-    [base.id]: http(),
     [baseSepolia.id]: http(),
   },
   ssr: true, // Enable SSR for Next.js
