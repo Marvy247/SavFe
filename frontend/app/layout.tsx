@@ -33,7 +33,7 @@ function ThemedOnchainKitProvider({ children }: { children: React.ReactNode }) {
           display: 'modal', // 'modal' | 'drawer'
           preference: 'all', // 'all' | 'smartWalletOnly' | 'eoaOnly'
         },
-        paymaster: process.env.NEXT_PUBLIC_PAYMASTER_URL || 'https://paymaster.base.org', // Paymaster URL when available
+        // paymaster: process.env.NEXT_PUBLIC_PAYMASTER_URL, // Paymaster URL if available on Celo
       }}
     >
       {children}

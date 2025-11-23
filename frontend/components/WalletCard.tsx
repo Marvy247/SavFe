@@ -90,7 +90,7 @@ export const WalletCard = () => {
           
           <WalletDropdownLink
             icon="activity"
-            href={`https://sepolia.basescan.org/address/${address}`}
+            href={`https://explorer.celo.org/alfajores/address/${address}`}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -158,7 +158,7 @@ export const WalletCardCompact = () => {
 
           <WalletDropdownLink
             icon="activity"
-            href={`https://sepolia.basescan.org/address/${address}`}
+            href={`https://explorer.celo.org/alfajores/address/${address}`}
             target="_blank"
             rel="noopener noreferrer"
           >

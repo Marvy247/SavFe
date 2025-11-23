@@ -129,7 +129,7 @@ export default function TxButton({
           </svg>
           <span>Transaction: </span>
           <a
-            href={`https://sepolia.basescan.org/tx/${txHash}`}
+            href={`https://explorer.celo.org/alfajores/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline font-mono"

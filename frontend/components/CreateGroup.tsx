@@ -170,7 +170,7 @@ export default function CreateGroup() {
               <p>• Each member contributes <strong>{amountNum} ETH</strong></p>
               <p>• Contribution cycle: <strong>{periodNum} days</strong></p>
               <p>• Maximum group size: <strong>10 members</strong></p>
-              <p>• Smart contract secured on Base blockchain</p>
+              <p>• Smart contract secured on Celo blockchain</p>
             </div>
           </div>
         )}

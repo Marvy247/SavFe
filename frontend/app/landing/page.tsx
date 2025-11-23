@@ -40,7 +40,7 @@ export default function LandingPage() {
               className="text-sm font-medium rounded-full py-2 px-4 shadow-lg backdrop-blur-sm bg-white/10 dark:bg-black/20 border border-white/20"
             >
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse mr-2"></span>{" "}
-              Built on Base
+              Built on Celo
             </Badge>
           </div>
           <h1 className="relative z-10 mx-auto max-w-5xl text-center text-3xl md:text-5xl lg:text-8xl font-extrabold text-neutral-900 dark:text-white leading-tight" data-aos="fade-up" data-aos-delay="200">
@@ -52,7 +52,7 @@ export default function LandingPage() {
           <p className="relative z-10 mx-auto mt-6 max-w-3xl text-center text-lg md:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed" data-aos="fade-up" data-aos-delay="400">
             Join decentralized rotating savings groups, earn rewards, and build wealth securely without intermediaries.
             <span className="text-primary font-semibold block mt-2">
-              Powered by smart contracts on Base.
+              Powered by smart contracts on Celo.
             </span>
           </p>
 
@@ -164,7 +164,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-2xl font-semibold mb-4">Bank-Grade Security</h3>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Every transaction is immutably recorded on the Base blockchain, ensuring unparalleled security and complete transparency.
+                Every transaction is immutably recorded on the Celo blockchain, ensuring unparalleled security and complete transparency.
               </p>
             </div>
 
@@ -188,7 +188,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-2xl font-semibold mb-4">Lightning Fast</h3>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Enjoy instant transactions and real-time updates, powered by Base's high-performance Layer 2 blockchain.
+                Enjoy instant transactions and real-time updates, powered by Celo's carbon-negative blockchain with low transaction fees.
               </p>
             </div>
           </div>

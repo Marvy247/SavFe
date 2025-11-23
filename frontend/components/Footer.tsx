@@ -25,8 +25,8 @@ export default function Footer() {
     ],
     company: [
       { name: "About", href: "/landing" },
-      { name: "Documentation", href: "https://docs.base.org/" },
-      { name: "Explorer", href: "https://sepolia.basescan.org/" },
+      { name: "Documentation", href: "https://docs.celo.org/" },
+      { name: "Explorer", href: "https://explorer.celo.org/alfajores" },
       { name: "Support", href: "#" },
     ],
     legal: [
@@ -147,7 +147,7 @@ export default function Footer() {
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                   <div className="h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></div>
-                  Built on Base
+                  Built on Celo
                 </Badge>
               </div>
             </div>
@@ -279,7 +279,7 @@ export default function Footer() {
                             {address.slice(0, 6)}...{address.slice(-4)}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            Base Sepolia
+                            Celo Alfajores
                           </Badge>
                         </div>
                       </div>

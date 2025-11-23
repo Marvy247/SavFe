@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "@/components/ui/button";
 import { SAVFE_ABI, SAVFE_ADDRESS } from "@/lib/contract";
+import { NotificationCenter } from "./NotificationCenter";
 
 
 export default function Header() {
@@ -99,7 +100,7 @@ export default function Header() {
               <Separator orientation="vertical" className="h-6" />
 
               <a
-                href="https://sepolia.basescan.org/"
+                href="https://explorer.celo.org/alfajores"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
@@ -109,7 +110,7 @@ export default function Header() {
               </a>
 
             <a
-              href="https://docs.base.org/"
+              href="https://docs.celo.org/"
               target="_blank"
               rel="noopener noreferrer"
               className="group relative px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
@@ -148,7 +149,7 @@ export default function Header() {
             <div className="hidden lg:flex items-center space-x-2">
               <Badge variant="outline" className="text-xs">
                 <div className="h-2 w-2 rounded-full bg-primary mr-2"></div>
-                Base
+                Celo Alfajores
               </Badge>
             </div>
 
@@ -156,16 +157,8 @@ export default function Header() {
             <div className="hidden md:flex items-center space-x-2">
               <ThemeToggle />
 
-              {/* Notification Bell */}
-              <Button variant="outline" size="icon" className="relative hidden lg:flex">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM15 17H9a6 6 0 01-6-6V9a6 6 0 0110.29-4.12L15 9v8z" />
-                </svg>
-                {/* Notification badge */}
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                  3
-                </span>
-              </Button>
+              {/* Notification Center */}
+              <NotificationCenter />
 
               <WalletCardCompact />
             </div>

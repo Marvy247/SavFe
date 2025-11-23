@@ -1,5 +1,5 @@
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "wagmi/chains";
+import { celoAlfajores } from "wagmi/chains";
 
 export const FACTORY_ADDRESS = "0x657740711A1Cd13412e81dE1cDF1F055C8AF28C6" as `0x${string}`;
 
@@ -801,7 +801,7 @@ export const NFT_ABI = [
 
 // Create a public client for reading contract data
 export const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: celoAlfajores,
   transport: http(),
 });
 

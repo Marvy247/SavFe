@@ -543,7 +543,7 @@ export default function TransactionHistory() {
                     <TableCell>{getStatusBadge(tx.status)}</TableCell>
                     <TableCell>
                       <a
-                        href={`https://sepolia.basescan.org/tx/${tx.txHash}`}
+                        href={`https://explorer.celo.org/alfajores/tx/${tx.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline font-mono text-sm transition-colors"
